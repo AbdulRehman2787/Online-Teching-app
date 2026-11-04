@@ -1,0 +1,36 @@
+# Virtual Environments (بہت بڑی ہوتی ہیں، گٹ ہب پر نہیں ڈالتے)
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables & Secrets (اس میں آپ کا پاسورڈ 2787 ہے، اسے گٹ ہب پر کبھی نہ ڈالیں)
+.env
+.env.local
+.env.*.local
+
+# Database files (ڈیٹا بیس فائلز)
+*.db
+*.sqlite
+*.sqlite3
+
+# Python Cache & Compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Uploaded Files / Media (صارفین کی اپلوڈ کردہ کتابیں/پی ڈی ایف)
+uploads/books/*
+!uploads/books/.gitkeep
+
+# Temporary & Test files
+test.txt
+*.log
+
+# IDE & OS files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+.DS_Store

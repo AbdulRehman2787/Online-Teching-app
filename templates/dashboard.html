@@ -1,0 +1,671 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="flex-1 flex flex-col md:flex-row min-h-screen bg-slate-100">
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col shadow-xl z-20">
+        <!-- Brand -->
+        <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/30">
+                <i class="fa-solid fa-graduation-cap text-lg"></i>
+            </div>
+            <div>
+                <h2 class="text-sm font-bold text-white tracking-wide">Live Teacher Studio</h2>
+                <span class="text-xs text-indigo-400 font-medium">Sole Instructor & Admin</span>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto">
+            <button onclick="switchTab('classroom')" id="nav-classroom"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition bg-indigo-600 text-white shadow-md shadow-indigo-600/30">
+                <i class="fa-solid fa-chalkboard text-base w-5 text-center"></i>
+                <span>My Classroom</span>
+            </button>
+
+            <button onclick="switchTab('students')" id="nav-students"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-users text-base w-5 text-center"></i>
+                <span>Active Students</span>
+                <span id="sidebarStudentBadge" class="ml-auto bg-slate-800 text-indigo-300 text-xs px-2 py-0.5 rounded-full font-semibold">0/20</span>
+            </button>
+
+            <button onclick="switchTab('library')" id="nav-library"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-book-bookmark text-base w-5 text-center"></i>
+                <span>Digital Library (PDF)</span>
+            </button>
+
+            <button onclick="switchTab('attendance')" id="nav-attendance"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-clipboard-user text-base w-5 text-center"></i>
+                <span>Attendance Logs</span>
+            </button>
+
+            <button onclick="switchTab('settings')" id="nav-settings"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-gear text-base w-5 text-center"></i>
+                <span>Teacher Settings</span>
+            </button>
+        </nav>
+
+        <!-- User Info & Logout -->
+        <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 font-bold text-sm">
+                    {{ teacher.full_name[:2].upper() }}
+                </div>
+                <div class="text-xs">
+                    <p class="font-semibold text-white truncate max-w-[110px]">{{ teacher.full_name }}</p>
+                    <p class="text-slate-500 truncate max-w-[110px]">@{{ teacher.username }}</p>
+                </div>
+            </div>
+            <button onclick="logout()" title="Logout" class="text-slate-400 hover:text-red-400 p-2 rounded-lg transition">
+                <i class="fa-solid fa-power-off text-base"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col overflow-y-auto">
+        <!-- Top Banner Header -->
+        <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <h1 id="pageTitle" class="text-xl font-bold text-slate-900">My Classroom Overview</h1>
+                <span id="liveBadge" class="hidden items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 live-indicator-pulse"></span>
+                    <span>Live Session Active</span>
+                </span>
+                <span id="offlineBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-200 text-slate-600 border border-slate-300">
+                    <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                    <span>Classroom Offline</span>
+                </span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="/classroom/teacher" id="enterClassroomBtn" target="_blank"
+                    class="hidden items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-md shadow-indigo-600/30 transition">
+                    <i class="fa-solid fa-video"></i>
+                    <span>Enter Live Teaching Studio</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Dynamic Tabs Content -->
+        <div class="p-6 space-y-6">
+            <!-- 1. Classroom Tab -->
+            <section id="tab-classroom" class="space-y-6">
+                <!-- Live Class Control Action Bar -->
+                <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-6 shadow-xl border border-indigo-500/20 flex flex-wrap items-center justify-between gap-6">
+                    <div>
+                        <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Session Manager</span>
+                        <h2 class="text-2xl font-bold mt-1" id="displayClassName">{{ classroom.name }}</h2>
+                        <p class="text-sm text-slate-400 mt-1">Single permanent classroom for all your morning and evening batches.</p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button id="startClassBtn" onclick="toggleLiveClass(true)"
+                            class="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 transition flex items-center gap-2">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Start Live Class</span>
+                        </button>
+                        <button id="endClassBtn" onclick="toggleLiveClass(false)"
+                            class="hidden px-6 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm shadow-lg shadow-red-600/30 transition flex items-center gap-2">
+                            <i class="fa-solid fa-stop"></i>
+                            <span>End Live Class</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Permanent Class Details Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Permanent Link -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
+                                <i class="fa-solid fa-link text-lg"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-900">Permanent Student Link</h3>
+                            <p class="text-xs text-slate-500 mt-1">Students always use this identical link for any batch or time.</p>
+                            <div class="mt-4 p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 font-mono flex items-center justify-between break-all">
+                                <span id="studentLinkUrl">/join</span>
+                                <button onclick="copyStudentLink()" class="ml-2 text-indigo-600 hover:text-indigo-800 p-1 font-sans font-semibold text-xs flex items-center gap-1">
+                                    <i class="fa-regular fa-copy"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Class Password & Security -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
+                                <i class="fa-solid fa-key text-lg"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-900">Class Password</h3>
+                            <p class="text-xs text-slate-500 mt-1">Changing password instantly disconnects all current students.</p>
+                            <div class="mt-4 flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                                <span id="currentPasswordMask" class="font-mono text-sm text-slate-800 font-semibold tracking-wider">••••••••</span>
+                                <button onclick="openChangePasswordModal()" class="text-xs font-semibold text-amber-600 hover:text-amber-800">
+                                    Change Password
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Room Capacity & ID -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+                                <i class="fa-solid fa-shield-halved text-lg"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-900">Classroom Limit & ID</h3>
+                            <p class="text-xs text-slate-500 mt-1">Permanent Room ID: <code class="font-mono font-bold text-slate-800">{{ classroom.permanent_id }}</code></p>
+                            <div class="mt-4 flex items-center justify-between text-xs font-semibold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                <span>Max Concurrent Limit:</span>
+                                <span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-bold">20 Students</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Active Students Tab -->
+            <section id="tab-students" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Live Active Students in Room</h3>
+                            <p class="text-xs text-slate-500">Manage individual audio microphone permissions or remove unauthorized students.</p>
+                        </div>
+                        <span id="activeCountBadge" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold">
+                            0 / 20 Present
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="text-xs text-slate-400 uppercase bg-slate-50 border-y border-slate-200">
+                                <tr>
+                                    <th class="px-4 py-3">Student Name</th>
+                                    <th class="px-4 py-3">Session ID</th>
+                                    <th class="px-4 py-3">Microphone</th>
+                                    <th class="px-4 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activeStudentsTableBody" class="divide-y divide-slate-100">
+                                <tr>
+                                    <td colspan="4" class="px-4 py-8 text-center text-slate-400 text-xs">
+                                        No students currently in the classroom.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Digital Library Tab -->
+            <section id="tab-library" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Digital PDF Book Library</h3>
+                            <p class="text-xs text-slate-500">Upload books here. Any selected book can be opened and live synchronized in class.</p>
+                        </div>
+                        <button onclick="openUploadBookModal()"
+                            class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md shadow-indigo-600/30 transition flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Upload PDF Book</span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="booksGrid">
+                        {% for book in books %}
+                        <div class="border border-slate-200 rounded-xl p-5 hover:border-indigo-300 transition bg-slate-50 flex flex-col justify-between">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-file-pdf text-xl"></i>
+                                </div>
+                                <div class="flex-1 overflow-hidden">
+                                    <h4 class="font-bold text-sm text-slate-900 truncate" title="{{ book.title }}">{{ book.title }}</h4>
+                                    <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ book.description or 'No description provided.' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between text-xs">
+                                <span class="text-slate-400 font-medium">{{ (book.file_size / 1024 / 1024) | round(2) }} MB</span>
+                                <div class="flex items-center gap-2">
+                                    <a href="/books/file/{{ book.id }}" target="_blank" class="text-slate-600 hover:text-indigo-600 font-semibold p-1" title="Preview PDF">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                    <button onclick="deleteBook({{ book.id }})" class="text-slate-400 hover:text-red-600 font-semibold p-1" title="Delete">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-span-full py-12 text-center text-slate-400 text-sm">
+                            <i class="fa-solid fa-book-open text-3xl mb-3 text-slate-300"></i>
+                            <p>No PDF books uploaded yet. Click <strong>Upload PDF Book</strong> above to add teaching material.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Attendance Tab -->
+            <section id="tab-attendance" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Attendance Records</h3>
+                            <p class="text-xs text-slate-500">Complete historical attendance logs for all morning and evening class sessions.</p>
+                        </div>
+                        <button onclick="loadAttendance()" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="text-xs text-slate-400 uppercase bg-slate-50 border-y border-slate-200">
+                                <tr>
+                                    <th class="px-4 py-3">Student Name</th>
+                                    <th class="px-4 py-3">Session ID</th>
+                                    <th class="px-4 py-3">Join Time</th>
+                                    <th class="px-4 py-3">Leave Time</th>
+                                    <th class="px-4 py-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBody" class="divide-y divide-slate-100">
+                                <tr>
+                                    <td colspan="5" class="px-4 py-8 text-center text-slate-400 text-xs">
+                                        Loading attendance data...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. Settings Tab -->
+            <section id="tab-settings" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl">
+                    <h3 class="text-base font-bold text-slate-900 mb-1">Teacher Account Profile</h3>
+                    <p class="text-xs text-slate-500 mb-6">Update your personal account credentials or change your master login password.</p>
+
+                    <form id="profileForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Full Name</label>
+                            <input type="text" id="teacherFullName" value="{{ teacher.full_name }}" required
+                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Email Address</label>
+                            <input type="email" id="teacherEmail" value="{{ teacher.email }}" required
+                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Phone Number</label>
+                            <input type="text" id="teacherPhone" value="{{ teacher.phone_number or '' }}"
+                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-200">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">Change Account Password (Optional)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs text-slate-500 mb-1">Current Password</label>
+                                    <input type="password" id="currentLoginPassword" placeholder="••••••••"
+                                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-500 mb-1">New Password</label>
+                                    <input type="password" id="newLoginPassword" placeholder="••••••••" minlength="6"
+                                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md transition">
+                                Save Profile Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<!-- Modal: Change Class Password -->
+<div id="changePasswordModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200">
+        <h3 class="text-base font-bold text-slate-900 mb-1">Change Classroom Password</h3>
+        <p class="text-xs text-slate-500 mb-4">Note: Changing the password will immediately disconnect all currently joined students.</p>
+
+        <form id="changePasswordForm" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">New Class Password</label>
+                <input type="text" id="newClassPassword" required minlength="4" placeholder="Enter new password"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button type="button" onclick="closeChangePasswordModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md">
+                    Update Password
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Upload PDF Book -->
+<div id="uploadBookModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+        <h3 class="text-base font-bold text-slate-900 mb-1">Upload New PDF Book</h3>
+        <p class="text-xs text-slate-500 mb-4">Upload books for your curriculum to read and annotate live during class.</p>
+
+        <form id="uploadBookForm" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Book Title</label>
+                <input type="text" id="bookTitle" required placeholder="e.g. Arabic Grammar Part 1"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Description (Optional)</label>
+                <textarea id="bookDescription" rows="2" placeholder="Course notes or description"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">PDF File</label>
+                <input type="file" id="bookFile" accept="application/pdf" required
+                    class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button type="button" onclick="closeUploadBookModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
+                    Cancel
+                </button>
+                <button type="submit" id="uploadSubmitBtn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md">
+                    Upload Book
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let isLive = {{ 'true' if classroom.is_live else 'false' }};
+    const studentUrl = window.location.origin + '/join';
+    document.getElementById('studentLinkUrl').textContent = studentUrl;
+
+    function updateLiveUI() {
+        const liveBadge = document.getElementById('liveBadge');
+        const offlineBadge = document.getElementById('offlineBadge');
+        const startBtn = document.getElementById('startClassBtn');
+        const endBtn = document.getElementById('endClassBtn');
+        const enterBtn = document.getElementById('enterClassroomBtn');
+
+        if (isLive) {
+            liveBadge.classList.remove('hidden');
+            liveBadge.classList.add('inline-flex');
+            offlineBadge.classList.add('hidden');
+            startBtn.classList.add('hidden');
+            endBtn.classList.remove('hidden');
+            enterBtn.classList.remove('hidden');
+            enterBtn.classList.add('inline-flex');
+        } else {
+            liveBadge.classList.add('hidden');
+            offlineBadge.classList.remove('hidden');
+            offlineBadge.classList.add('inline-flex');
+            startBtn.classList.remove('hidden');
+            endBtn.classList.add('hidden');
+            enterBtn.classList.add('hidden');
+        }
+    }
+    updateLiveUI();
+
+    function switchTab(tab) {
+        ['classroom', 'students', 'library', 'attendance', 'settings'].forEach(t => {
+            const sec = document.getElementById(`tab-${t}`);
+            const nav = document.getElementById(`nav-${t}`);
+            if (t === tab) {
+                sec.classList.remove('hidden');
+                nav.className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition bg-indigo-600 text-white shadow-md shadow-indigo-600/30";
+            } else {
+                sec.classList.add('hidden');
+                nav.className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white";
+            }
+        });
+
+        if (tab === 'students') loadActiveStudents();
+        if (tab === 'attendance') loadAttendance();
+    }
+
+    async function toggleLiveClass(start) {
+        const endpoint = start ? '/api/teacher/classroom/start' : '/api/teacher/classroom/end';
+        try {
+            const res = await fetch(endpoint, { method: 'POST' });
+            if (!res.ok) throw new Error('Action failed');
+            isLive = start;
+            updateLiveUI();
+            if (start) {
+                window.open('/classroom/teacher', '_blank');
+            }
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    function copyStudentLink() {
+        navigator.clipboard.writeText(studentUrl);
+        alert('Permanent class link copied to clipboard!');
+    }
+
+    function openChangePasswordModal() {
+        document.getElementById('changePasswordModal').classList.remove('hidden');
+    }
+    function closeChangePasswordModal() {
+        document.getElementById('changePasswordModal').classList.add('hidden');
+    }
+
+    document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newPassword = document.getElementById('newClassPassword').value.trim();
+        try {
+            const res = await fetch('/api/teacher/classroom/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_password: newPassword })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Failed');
+            alert(data.message);
+            closeChangePasswordModal();
+            loadActiveStudents();
+        } catch (err) {
+            alert(err.message);
+        }
+    });
+
+    function openUploadBookModal() {
+        document.getElementById('uploadBookModal').classList.remove('hidden');
+    }
+    function closeUploadBookModal() {
+        document.getElementById('uploadBookModal').classList.add('hidden');
+    }
+
+    document.getElementById('uploadBookForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('bookTitle').value.trim();
+        const desc = document.getElementById('bookDescription').value.trim();
+        const file = document.getElementById('bookFile').files[0];
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('description', desc);
+        formData.append('file', file);
+
+        const btn = document.getElementById('uploadSubmitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Uploading...';
+
+        try {
+            const res = await fetch('/api/teacher/books/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Upload failed');
+            alert('Book uploaded successfully!');
+            location.reload();
+        } catch (err) {
+            alert(err.message);
+            btn.disabled = false;
+            btn.textContent = 'Upload Book';
+        }
+    });
+
+    async function deleteBook(id) {
+        if (!confirm('Are you sure you want to delete this book?')) return;
+        try {
+            const res = await fetch(`/api/teacher/books/${id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Delete failed');
+            location.reload();
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    async function loadActiveStudents() {
+        try {
+            const res = await fetch('/api/teacher/students/active');
+            const data = await res.json();
+            const tbody = document.getElementById('activeStudentsTableBody');
+            document.getElementById('activeCountBadge').textContent = `${data.count} / ${data.max_limit} Present`;
+            document.getElementById('sidebarStudentBadge').textContent = `${data.count}/${data.max_limit}`;
+
+            if (data.students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-xs">No students currently in the classroom.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.students.map(s => `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-3 font-semibold text-slate-900">${s.name}</td>
+                    <td class="px-4 py-3 font-mono text-xs text-slate-500">${s.session_id}</td>
+                    <td class="px-4 py-3">
+                        <button onclick="toggleStudentMic('${s.session_id}', ${!s.mic_allowed})"
+                            class="px-2.5 py-1 rounded-lg text-xs font-semibold ${s.mic_allowed ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
+                            <i class="fa-solid ${s.mic_allowed ? 'fa-microphone' : 'fa-microphone-slash'} mr-1"></i>
+                            ${s.mic_allowed ? 'Allowed' : 'Muted'}
+                        </button>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <button onclick="kickStudent('${s.session_id}')" class="text-red-500 hover:text-red-700 text-xs font-semibold">
+                            <i class="fa-solid fa-user-xmark mr-1"></i> Remove
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function toggleStudentMic(sessionId, allow) {
+        try {
+            await fetch(`/api/teacher/students/${sessionId}/mic?allow=${allow}`, { method: 'POST' });
+            loadActiveStudents();
+        } catch (err) {
+            alert('Failed to change microphone permission');
+        }
+    }
+
+    async function kickStudent(sessionId) {
+        if (!confirm('Kick this student from the live classroom?')) return;
+        try {
+            await fetch(`/api/teacher/students/${sessionId}/kick`, { method: 'POST' });
+            loadActiveStudents();
+        } catch (err) {
+            alert('Failed to remove student');
+        }
+    }
+
+    async function loadAttendance() {
+        try {
+            const res = await fetch('/api/teacher/attendance');
+            const data = await res.json();
+            const tbody = document.getElementById('attendanceTableBody');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400 text-xs">No attendance records found.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = data.map(r => `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-3 font-semibold text-slate-900">${r.student_name}</td>
+                    <td class="px-4 py-3 font-mono text-xs text-slate-500">${r.session_id}</td>
+                    <td class="px-4 py-3 text-xs text-slate-600">${new Date(r.join_time).toLocaleString()}</td>
+                    <td class="px-4 py-3 text-xs text-slate-600">${r.leave_time ? new Date(r.leave_time).toLocaleString() : '<span class="text-emerald-600 font-semibold">Still Connected</span>'}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${r.status === 'present' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
+                            ${r.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // Teacher Profile Update
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            full_name: document.getElementById('teacherFullName').value.trim(),
+            email: document.getElementById('teacherEmail').value.trim(),
+            phone_number: document.getElementById('teacherPhone').value.trim(),
+            current_password: document.getElementById('currentLoginPassword').value || null,
+            new_password: document.getElementById('newLoginPassword').value || null
+        };
+        try {
+            const res = await fetch('/api/auth/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Update failed');
+            alert('Teacher profile updated successfully!');
+            location.reload();
+        } catch (err) {
+            alert(err.message);
+        }
+    });
+
+    async function logout() {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/login';
+    }
+
+    // Auto-refresh student count every 5 seconds
+    setInterval(loadActiveStudents, 5000);
+</script>
+{% endblock %}

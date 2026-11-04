@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Live Teaching Studio | {{ classroom.name }}{% endblock %}
+
+{% block extra_head %}
+<!-- PDF.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- LiveKit Client SDK -->
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="h-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden">
+    <!-- Studio Header -->
+    <header class="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between z-30 flex-shrink-0">
+        <div class="flex items-center gap-3">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 live-indicator-pulse"></span>
+            <h1 class="text-sm font-bold text-white tracking-wide truncate max-w-xs">{{ classroom.name }}</h1>
+            <span class="bg-indigo-900/60 text-indigo-300 border border-indigo-700/50 text-xs px-2.5 py-0.5 rounded-full font-semibold">Teacher Studio</span>
+            <span id="sessionTimer" class="font-mono text-xs text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-md">00:00:00</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Layout Switcher -->
+            <div class="bg-slate-800 p-0.5 rounded-xl flex items-center text-xs">
+                <button onclick="setLayout('split')" id="btnLayoutSplit" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-medium" title="Split Screen">
+                    <i class="fa-solid fa-table-columns"></i>
+                </button>
+                <button onclick="setLayout('pdf')" id="btnLayoutPdf" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white" title="PDF Fullscreen">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </button>
+                <button onclick="setLayout('video')" id="btnLayoutVideo" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white" title="Video Fullscreen">
+                    <i class="fa-solid fa-video"></i>
+                </button>
+            </div>
+
+            <!-- Share Link -->
+            <button onclick="copyJoinLink()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 flex items-center gap-1.5 border border-slate-700">
+                <i class="fa-solid fa-link text-indigo-400"></i>
+                <span>Copy Link</span>
+            </button>
+
+            <!-- End Session -->
+            <button onclick="endSession()" class="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-xs font-bold text-white flex items-center gap-1.5 shadow-md shadow-red-600/30">
+                <i class="fa-solid fa-phone-slash"></i>
+                <span>End Class</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Studio Workspace -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- LEFT: Interactive PDF Reader & Whiteboard Annotation Panel -->
+        <div id="pdfPanel" class="flex-1 flex flex-col bg-slate-900 border-r border-slate-800 overflow-hidden">
+            <!-- PDF Toolbar -->
+            <div class="h-12 bg-slate-850 bg-slate-900/90 border-b border-slate-800 px-4 flex items-center justify-between gap-3 text-xs flex-shrink-0">
+                <!-- Book Picker -->
+                <div class="flex items-center gap-2">
+                    <label class="text-slate-400 font-medium">Book:</label>
+                    <select id="bookSelect" onchange="switchBook()" class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                        <option value="">-- Select a Book to Teach --</option>
+                        {% for book in books %}
+                        <option value="{{ book.id }}">{{ book.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Page Navigator -->
+                <div class="flex items-center gap-1.5 bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-700">
+                    <button onclick="prevPage()" class="p-1 text-slate-300 hover:text-white" title="Previous Page">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <span class="text-slate-400">Page</span>
+                    <input type="number" id="pageNumInput" value="1" min="1" onchange="jumpToPage()"
+                        class="w-12 bg-slate-900 text-center font-bold text-white rounded px-1 py-0.5 text-xs focus:outline-none">
+                    <span class="text-slate-400">of <span id="pageCountSpan">1</span></span>
+                    <button onclick="nextPage()" class="p-1 text-slate-300 hover:text-white" title="Next Page">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Annotation Toolbar -->
+                <div class="flex items-center gap-1 bg-slate-800 p-1 rounded-lg border border-slate-700">
+                    <button onclick="setTool('pen')" id="toolPen" class="p-1.5 rounded bg-indigo-600 text-white" title="Pen">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button onclick="setTool('highlighter')" id="toolHighlighter" class="p-1.5 rounded text-slate-400 hover:text-white" title="Highlighter">
+                        <i class="fa-solid fa-highlighter"></i>
+                    </button>
+                    <button onclick="setTool('line')" id="toolLine" class="p-1.5 rounded text-slate-400 hover:text-white" title="Underline / Line">
+                        <i class="fa-solid fa-underline"></i>
+                    </button>
+                    <input type="color" id="brushColor" value="#ef4444" onchange="setColor(this.value)" class="w-6 h-6 rounded cursor-pointer border-0 bg-transparent" title="Color Picker">
+                    <button onclick="clearAnnotations()" class="p-1.5 rounded text-slate-400 hover:text-red-400 ml-1" title="Clear Annotations">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+
+                <!-- Zoom Controls -->
+                <div class="flex items-center gap-1 text-slate-400">
+                    <button onclick="zoomOut()" class="p-1 hover:text-white"><i class="fa-solid fa-minus"></i></button>
+                    <span id="zoomLevel">100%</span>
+                    <button onclick="zoomIn()" class="p-1 hover:text-white"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
+
+            <!-- PDF Viewer Canvas Area -->
+            <div id="pdfScrollContainer" class="flex-1 overflow-auto flex items-center justify-center p-4 bg-slate-950">
+                <div id="canvasWrapper" class="pdf-viewport-container relative shadow-2xl">
+                    <canvas id="pdfCanvas"></canvas>
+                    <canvas id="annotationCanvas" class="pdf-annotation-canvas"></canvas>
+                </div>
+                <div id="noBookPlaceholder" class="text-center text-slate-500 py-20">
+                    <i class="fa-solid fa-book-open text-5xl mb-4 text-slate-700"></i>
+                    <p class="text-base font-semibold text-slate-400">No book selected</p>
+                    <p class="text-xs text-slate-600 mt-1">Select a PDF book from the dropdown above to display and synchronize live with students.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Live Video Grid, Controls & Chat Panel -->
+        <div id="rightSidebar" class="w-96 bg-slate-900 flex flex-col border-l border-slate-800 flex-shrink-0">
+            <!-- Sidebar Tabs -->
+            <div class="h-11 bg-slate-850 bg-slate-900 border-b border-slate-800 flex items-center justify-around px-2 text-xs font-semibold">
+                <button onclick="switchRightTab('videos')" id="tabBtnVideos" class="flex-1 py-2 text-indigo-400 border-b-2 border-indigo-500 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-video"></i>
+                    <span>Students (<span id="studentCountBadge">0</span>)</span>
+                </button>
+                <button onclick="switchRightTab('chat')" id="tabBtnChat" class="flex-1 py-2 text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Live Chat</span>
+                </button>
+            </div>
+
+            <!-- Video Grid Content -->
+            <div id="tabContentVideos" class="flex-1 p-3 overflow-y-auto space-y-3">
+                <!-- Teacher's Self Preview Tile -->
+                <div class="video-tile border-2 border-indigo-500/70">
+                    <video id="teacherLocalVideo" autoplay playsinline muted></video>
+                    <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-slate-900/80 text-[10px] font-bold text-indigo-300 flex items-center gap-1">
+                        <i class="fa-solid fa-chalkboard-user"></i> You (Teacher)
+                    </div>
+                    <div class="absolute top-2 right-2 flex items-center gap-1">
+                        <button onclick="toggleTeacherCam()" id="teacherCamBtn" class="p-1 rounded bg-slate-900/70 text-white text-xs hover:bg-slate-800">
+                            <i class="fa-solid fa-video"></i>
+                        </button>
+                        <button onclick="toggleTeacherMic()" id="teacherMicBtn" class="p-1 rounded bg-slate-900/70 text-white text-xs hover:bg-slate-800">
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Student Video Tiles Grid (Up to 20 students) -->
+                <div class="pt-2">
+                    <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                        <span class="font-bold uppercase tracking-wider text-[11px]">Enrolled Students</span>
+                        <span class="text-indigo-400 font-semibold" id="capacityIndicator">0 / 20 Max</span>
+                    </div>
+
+                    <div id="studentVideoGrid" class="grid grid-cols-2 gap-2">
+                        <!-- Student video cards will be dynamically inserted here -->
+                    </div>
+
+                    <div id="emptyStudentsMsg" class="text-center py-10 text-slate-600 text-xs">
+                        <i class="fa-solid fa-user-group text-2xl mb-2 text-slate-700"></i>
+                        <p>Waiting for students to join...</p>
+                        <p class="text-[11px] text-slate-600 mt-1">Share the permanent link with your students.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Tab Content -->
+            <div id="tabContentChat" class="hidden flex-1 flex flex-col overflow-hidden">
+                <div id="chatMessages" class="flex-1 p-3 space-y-2 overflow-y-auto text-xs">
+                    <div class="p-2 rounded-lg bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 text-[11px]">
+                        Welcome to live class chat. All messages sent here are seen by students in real-time.
+                    </div>
+                </div>
+
+                <form id="chatForm" class="p-2 border-t border-slate-800 flex items-center gap-1.5 bg-slate-850">
+                    <input type="text" id="chatInput" placeholder="Type a message..." required
+                        class="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <button type="submit" class="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/teacher_room.js"></script>
+{% endblock %}

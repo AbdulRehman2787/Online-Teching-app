@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # MySQL Database Service
+  mysql:
+    image: mysql:8.0
+    container_name: online_teaching_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: online_teaching_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # LiveKit Open Source WebRTC SFU Server
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: online_teaching_livekit
+    restart: always
+    command: --dev
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    environment:
+      - LIVEKIT_KEYS=devkey: secret
+
+volumes:
+  mysql_data:

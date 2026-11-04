@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Join Live Classroom | {{ classroom.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950">
+    <div class="max-w-md w-full glass-dark text-white rounded-3xl p-8 shadow-2xl border border-indigo-500/30">
+        <!-- Logo / Icon -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 mb-4 shadow-lg">
+                <i class="fa-solid fa-graduation-cap text-3xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight">Student Classroom Portal</h1>
+            <p class="text-sm text-indigo-300 font-semibold mt-1">{{ classroom.name }}</p>
+            <p class="text-xs text-slate-400 mt-2">Enter your name and the class password to join the live session.</p>
+        </div>
+
+        <!-- Alert -->
+        <div id="alertBox" class="hidden mb-6 p-4 rounded-2xl text-sm font-medium"></div>
+
+        <!-- Form -->
+        <form id="joinForm" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Your Full Name</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-regular fa-user"></i></span>
+                    <input type="text" id="studentName" required placeholder="e.g. Bilal Khan"
+                        class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Classroom Password</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-solid fa-key"></i></span>
+                    <input type="password" id="classPassword" required placeholder="Enter class password"
+                        class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+            </div>
+
+            <button type="submit" id="joinBtn"
+                class="w-full mt-6 py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white shadow-lg shadow-indigo-600/30 transition duration-200 flex items-center justify-center gap-2">
+                <span>Enter Classroom</span>
+                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+            <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-users text-indigo-400"></i> Max 20 Students
+            </span>
+            <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-lock text-emerald-400"></i> Secure Session
+            </span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const form = document.getElementById('joinForm');
+    const alertBox = document.getElementById('alertBox');
+    const joinBtn = document.getElementById('joinBtn');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const studentName = document.getElementById('studentName').value.trim();
+        const classPassword = document.getElementById('classPassword').value.trim();
+
+        joinBtn.disabled = true;
+        joinBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Verifying...';
+
+        try {
+            const res = await fetch('/api/student/verify-join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    student_name: studentName,
+                    class_password: classPassword
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.detail || 'Could not join classroom.');
+            }
+
+            // Save details to sessionStorage
+            sessionStorage.setItem('student_session_id', data.session_id);
+            sessionStorage.setItem('student_name', data.student_name);
+            sessionStorage.setItem('livekit_token', data.livekit_token);
+            sessionStorage.setItem('livekit_url', data.livekit_url);
+            sessionStorage.setItem('class_name', data.class_name);
+            sessionStorage.setItem('permanent_id', data.permanent_id);
+
+            showAlert('Admission approved! Entering live classroom...', 'success');
+            setTimeout(() => {
+                window.location.href = '/classroom/student';
+            }, 600);
+        } catch (err) {
+            showAlert(err.message, 'error');
+            joinBtn.disabled = false;
+            joinBtn.innerHTML = '<span>Enter Classroom</span> <i class="fa-solid fa-arrow-right-to-bracket"></i>';
+        }
+    });
+
+    function showAlert(msg, type) {
+        alertBox.className = type === 'error'
+            ? 'mb-6 p-4 rounded-xl text-sm font-medium bg-red-500/20 text-red-200 border border-red-500/30'
+            : 'mb-6 p-4 rounded-xl text-sm font-medium bg-emerald-500/20 text-emerald-200 border border-emerald-500/30';
+        alertBox.textContent = msg;
+        alertBox.classList.remove('hidden');
+    }
+</script>
+{% endblock %}
