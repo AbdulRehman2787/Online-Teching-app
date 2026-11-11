@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}نورانی قاعدہ مع تجوید — دار التعلیم والقرآن اکیڈمی{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <!-- Header -->
+    <div class="text-center max-w-3xl mx-auto space-y-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
+            <i class="fa-solid fa-spell-check text-emerald-600"></i>
+            <span>تجوید کا بنیادی قاعدہ — آسان اور انٹرایکٹو انداز</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">نورانی قاعدہ پریکٹس (Noorani Qaida Practice)</h1>
+        <p class="text-xs sm:text-sm text-slate-600 font-urdu leading-relaxed">
+            کسی بھی حرف یا تختی پر کلک کر کے اس کی صوتی ادائیگی اور درست مخارج سنیں۔ بچے اور بڑے اس پلیٹ فارم سے تجوید کی بنیادی مشق کر سکتے ہیں۔
+        </p>
+    </div>
+
+    <!-- Lesson Navigation Tabs -->
+    <div class="flex flex-wrap items-center justify-center gap-2 border-b border-slate-200 pb-4">
+        <button onclick="showQaidaLesson(1)" id="qaidaTab1" class="qaida-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white shadow-sm transition">
+            تختی نمبر 1: حروفِ مفردات
+        </button>
+        <button onclick="showQaidaLesson(2)" id="qaidaTab2" class="qaida-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            تختی نمبر 2: حروفِ مرکبات
+        </button>
+        <button onclick="showQaidaLesson(3)" id="qaidaTab3" class="qaida-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            تختی نمبر 4: حرکات (زبر، زیر، پیش)
+        </button>
+        <button onclick="showQaidaLesson(4)" id="qaidaTab4" class="qaida-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            تختی نمبر 5: تنوین
+        </button>
+    </div>
+
+    <!-- Active Sound Indicator Banner -->
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center text-lg flex-shrink-0">
+                <i class="fa-solid fa-volume-high"></i>
+            </div>
+            <div>
+                <h4 class="text-xs font-bold text-slate-900">صوتی ادائیگی سنیں (Interactive Pronunciation):</h4>
+                <p class="text-[11px] text-slate-600">کارڈ پر کلک کرنے سے درست عربی مخارج کی صوتی آواز سنی جا سکتی ہے۔</p>
+            </div>
+        </div>
+        <div id="playingBadge" class="hidden px-3 py-1 rounded-full bg-emerald-600 text-white text-[11px] font-bold">
+            <i class="fa-solid fa-waveform"></i> چل رہا ہے...
+        </div>
+    </div>
+
+    <!-- Lesson 1: حروفِ مفردات (29 Letters of Arabic Alphabet) -->
+    <div id="lessonBox1" class="qaida-lesson-box space-y-6">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+            <h2 class="text-xl font-bold text-emerald-900 mb-6 pb-3 border-b border-slate-100 flex items-center justify-between">
+                <span>تختی نمبر 1: حروفِ مفردات (حروفِ تہجی)</span>
+                <span class="text-xs text-slate-500 font-normal">کل حروف: 29</span>
+            </h2>
+
+            <!-- 29 Letters Grid -->
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-3 sm:gap-4 font-arabic">
+                {% set letters_full = [
+                    ('ا', 'الف', 'Alif', 'حلق کے نیچے سے نکلتا ہے'),
+                    ('ب', 'با', 'Baa', 'دونوں ہونٹوں کے تری والے حصے سے'),
+                    ('ت', 'تا', 'Taa', 'زبان کی نوک اور اوپر کے دانتوں کی جڑ سے'),
+                    ('ث', 'ثا', 'Thaa', 'زبان کا سرا اور اوپر کے دانتوں کا کنارہ'),
+                    ('ج', 'جیم', 'Jeem', 'زبان کا درمیانی حصہ اور تالو'),
+                    ('ح', 'حا', 'Haa', 'حلق کے درمیانی حصے سے'),
+                    ('خ', 'خا', 'Khaa', 'حلق کا وہ حصہ جو منہ کے قریب ہے'),
+                    ('د', 'دال', 'Daal', 'زبان کی نوک اور اوپر کے دانتوں کی جڑ'),
+                    ('ذ', 'ذال', 'Thaal', 'زبان کی نوک اور اوپر کے دانتوں کا کنارہ'),
+                    ('ر', 'را', 'Raa', 'زبان کا سرا اور تالو کے قریب'),
+                    ('ز', 'زا', 'Zaa', 'زبان کی نوک اور دونوں دانتوں کے کنارے'),
+                    ('س', 'سین', 'Seen', 'سیٹی والا حرف، زبان کی نوک سے'),
+                    ('ش', 'شین', 'Sheen', 'زبان کا درمیانی حصہ اور تالو'),
+                    ('ص', 'صاد', 'Saad', 'موٹا اور پر پڑھا جاتا ہے'),
+                    ('ض', 'ضاد', 'Dhaad', 'زبان کی کروٹ اور اوپر کی ڈاڑھوں سے'),
+                    ('ط', 'طا', 'Taa (Bold)', 'موٹا حرف، زبان کی نوک اور اوپر کے دانت'),
+                    ('ظ', 'ظا', 'Zhaa', 'موٹا حرف، زبان کا سرا اور دانتوں کا کنارہ'),
+                    ('ع', 'عین', 'Ain', 'حلق کے درمیان سے ادا ہوتا ہے'),
+                    ('غ', 'غین', 'Ghain', 'موٹا حرف، حلق کے بالائی حصے سے'),
+                    ('ف', 'فا', 'Faa', 'اوپر کے دانت اور نیچے کے ہونٹ کا پیٹ'),
+                    ('ق', 'قاف', 'Qaaf', 'موٹا حرف، زبان کی جڑ اور نرم تالو'),
+                    ('ك', 'کاف', 'Kaaf', 'زبان کی جڑ اور سخت تالو'),
+                    ('ل', 'لام', 'Laam', 'زبان کا کنارہ اور اوپر کے دانتوں کی جڑیں'),
+                    ('م', 'میم', 'Meem', 'دونوں ہونٹوں کے خشکی والے حصے سے'),
+                    ('ن', 'نون', 'Noon', 'زبان کا سرا اور اوپر کا تالو مع غنہ'),
+                    ('و', 'واؤ', 'Waaw', 'دونوں ہونٹوں کو گول کر کے'),
+                    ('ه', 'ہا', 'Haa', 'حلق کے نچلے حصے یعنی سینے کے قریب سے'),
+                    ('ء', 'ہمزہ', 'Hamzah', 'حلق کے نچلے حصے سے جھٹکے کے ساتھ'),
+                    ('ي', 'یا', 'Yaa', 'زبان کا درمیانی حصہ اور تالو')
+                ] %}
+                {% for ar, ur, en, makhraj in letters_full %}
+                <button onclick="playLetter('{{ ar }}', '{{ ur }}')" class="p-4 rounded-2xl bg-slate-50 hover:bg-emerald-700 hover:text-white border border-slate-200 hover:border-amber-400 shadow-sm hover:shadow-lg transition duration-200 flex flex-col items-center justify-center group relative">
+                    <span class="text-3xl sm:text-4xl font-black text-emerald-900 group-hover:text-amber-300 transition">{{ ar }}</span>
+                    <span class="text-xs font-bold text-slate-600 group-hover:text-slate-100 mt-2 font-urdu">{{ ur }}</span>
+                    <span class="text-[9px] text-slate-400 group-hover:text-slate-200">{{ en }}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Lesson 2: مرکبات (Compound Letters) -->
+    <div id="lessonBox2" class="qaida-lesson-box hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+            <h2 class="text-xl font-bold text-emerald-900 mb-6 pb-3 border-b border-slate-100 flex items-center justify-between">
+                <span>تختی نمبر 2: حروفِ مرکبات (ملے جلے حروف)</span>
+                <span class="text-xs text-slate-500 font-normal">حروف کی مختلف اشکال</span>
+            </h2>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4 font-arabic text-center">
+                {% set compounds = [
+                    ('لا', 'لام الف'), ('با', 'با الف'), ('کا', 'کاف الف'), ('سا', 'سین الف'),
+                    ('بل', 'با لام'), ('تل', 'تا لام'), ('کل', 'کاف لام'), ('فل', 'فا لام'),
+                    ('بج', 'با جیم'), ('تح', 'تا حا'), ('نخ', 'نون خا'), ('یع', 'یا عین'),
+                    ('بد', 'با دال'), ('ند', 'نون دال'), ('مد', 'میم دال'), ('ہد', 'ہا دال'),
+                    ('بر', 'با را'), ('تر', 'تا را'), ('یر', 'یا را'), ('نر', 'نون را')
+                ] %}
+                {% for c_ar, c_ur in compounds %}
+                <button onclick="playLetter('{{ c_ar }}', '{{ c_ur }}')" class="p-4 rounded-2xl bg-slate-50 hover:bg-indigo-700 hover:text-white border border-slate-200 shadow-sm hover:shadow-lg transition flex flex-col items-center justify-center group">
+                    <span class="text-3xl font-black text-slate-900 group-hover:text-amber-300 transition">{{ c_ar }}</span>
+                    <span class="text-xs font-bold text-slate-500 group-hover:text-slate-100 mt-1 font-urdu">{{ c_ur }}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Lesson 3: حرکات (Vowels: Zabar, Zer, Pesh) -->
+    <div id="lessonBox3" class="qaida-lesson-box hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+            <h2 class="text-xl font-bold text-emerald-900 mb-6 pb-3 border-b border-slate-100 flex items-center justify-between">
+                <span>تختی نمبر 4: حرکات (زبر، زیر، پیش)</span>
+                <span class="text-xs text-slate-500 font-normal">حرکات کو کھینچے بغیر معروف پڑھیں</span>
+            </h2>
+
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-4 font-arabic text-center">
+                {% set harakat = [
+                    ('أَ', 'ہمزہ زبر اَ'), ('إِ', 'ہمزہ زیر اِ'), ('أُ', 'ہمزہ پیش اُ'),
+                    ('بَ', 'با زبر بَ'), ('بِ', 'با زیر بِ'), ('بُ', 'با پیش بُ'),
+                    ('تَ', 'تا زبر تَ'), ('تِ', 'تا زیر تِ'), ('تُ', 'تا پیش تُ'),
+                    ('ثَ', 'ثا زبر ثَ'), ('ثِ', 'ثا زیر ثِ'), ('ثُ', 'ثا پیش ثُ'),
+                    ('جَ', 'جیم زبر جَ'), ('جِ', 'جیم زیر جِ'), ('جُ', 'جیم پیش جُ'),
+                    ('دَ', 'دال زبر دَ'), ('دِ', 'دال زیر دِ'), ('دُ', 'دال پیش دُ')
+                ] %}
+                {% for h_ar, h_ur in harakat %}
+                <button onclick="playLetter('{{ h_ar }}', '{{ h_ur }}')" class="p-4 rounded-2xl bg-slate-50 hover:bg-emerald-800 hover:text-white border border-slate-200 shadow-sm hover:shadow-lg transition flex flex-col items-center justify-center group">
+                    <span class="text-3xl font-black text-emerald-800 group-hover:text-amber-300 transition">{{ h_ar }}</span>
+                    <span class="text-[11px] font-bold text-slate-500 group-hover:text-slate-100 mt-1 font-urdu">{{ h_ur }}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Lesson 4: تنوین (Tanween) -->
+    <div id="lessonBox4" class="qaida-lesson-box hidden space-y-6">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+            <h2 class="text-xl font-bold text-emerald-900 mb-6 pb-3 border-b border-slate-100 flex items-center justify-between">
+                <span>تختی نمبر 5: تنوین (دو زبر، دو زیر، دو پیش)</span>
+                <span class="text-xs text-slate-500 font-normal">تنوین میں نون ساکن کی آواز شامل ہوتی ہے</span>
+            </h2>
+
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-4 font-arabic text-center">
+                {% set tanween = [
+                    ('مً', 'میم دو زبر مَنْ'), ('مٍ', 'میم دو زیر مِنْ'), ('مٌ', 'میم دو پیش مُنْ'),
+                    ('بً', 'با دو زبر بَنْ'), ('بٍ', 'با دو زیر بِنْ'), ('بٌ', 'با دو پیش بُنْ'),
+                    ('تً', 'تا دو زبر تَنْ'), ('تٍ', 'تا دو زیر تِنْ'), ('تٌ', 'تا دو پیش تُنْ'),
+                    ('رً', 'را دو زبر رَنْ'), ('رٍ', 'را دو زیر رِنْ'), ('رٌ', 'را دو پیش رُنْ')
+                ] %}
+                {% for t_ar, t_ur in tanween %}
+                <button onclick="playLetter('{{ t_ar }}', '{{ t_ur }}')" class="p-4 rounded-2xl bg-slate-50 hover:bg-teal-800 hover:text-white border border-slate-200 shadow-sm hover:shadow-lg transition flex flex-col items-center justify-center group">
+                    <span class="text-3xl font-black text-teal-800 group-hover:text-amber-300 transition">{{ t_ar }}</span>
+                    <span class="text-[11px] font-bold text-slate-500 group-hover:text-slate-100 mt-1 font-urdu">{{ t_ur }}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Practice Callout -->
+    <div class="bg-gradient-to-r from-emerald-800 to-slate-900 rounded-3xl p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div>
+            <h3 class="text-xl font-extrabold">کیا آپ اپنے بچے کو قاری صاحب سے لائیو پڑھانا چاہتے ہیں؟</h3>
+            <p class="text-xs sm:text-sm text-emerald-200 mt-1 font-urdu">
+                اکیڈمی میں تجربہ کار قاری حضرات کے زیر نگرانی ون آن ون کلاس میں شرکت کریں۔
+            </p>
+        </div>
+        <a href="/join" class="px-6 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-lg transition flex-shrink-0">
+            <span>کلاس میں شامل ہوں (داخلہ فارم)</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showQaidaLesson(num) {
+        document.querySelectorAll('.qaida-lesson-box').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.qaida-tab-btn').forEach(btn => {
+            btn.className = 'qaida-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+        });
+
+        document.getElementById(`lessonBox${num}`).classList.remove('hidden');
+        document.getElementById(`qaidaTab${num}`).className = 'qaida-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white shadow-sm transition';
+    }
+
+    function playLetter(char, name) {
+        const badge = document.getElementById('playingBadge');
+        badge.classList.remove('hidden');
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(char);
+            utterance.lang = 'ar-SA';
+            utterance.rate = 0.8;
+            utterance.onend = () => {
+                badge.classList.add('hidden');
+            };
+            window.speechSynthesis.speak(utterance);
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+</script>
+{% endblock %}

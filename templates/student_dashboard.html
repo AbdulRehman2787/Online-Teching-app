@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}طالب علم ڈیش بورڈ — دار التعلیم والقرآن اکیڈمی{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Top Welcome Banner (Requirement 5) -->
+    <div class="bg-gradient-to-r from-emerald-800 via-emerald-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-emerald-700/40">
+        <!-- Background Pattern -->
+        <div class="absolute -left-10 -bottom-10 w-48 h-48 opacity-10 pointer-events-none">
+            <img src="/static/images/app_logo.svg" alt="Pattern">
+        </div>
+
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <!-- Top Badge -->
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-700/80 text-amber-300 text-xs font-bold mb-3 border border-emerald-600">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                    <span>منظور شدہ طالب علم (Approved Student)</span>
+                </div>
+                <!-- Assalamu Alaikum, [Student Name] (Requirement 5) -->
+                <h1 class="text-2xl sm:text-4xl font-black text-white tracking-tight">
+                    السلام علیکم، {{ student.full_name }}!
+                </h1>
+                <p class="text-xs sm:text-sm text-emerald-200 mt-2 font-urdu">
+                    دار التعلیم والقرآن پورٹل میں خوش آمدید۔ آپ کا منتخب کورس: <strong class="text-amber-300">{{ student.requested_course }}</strong>
+                </p>
+            </div>
+
+            <!-- Student ID Card Badge -->
+            <div class="bg-slate-950/60 border border-emerald-500/40 rounded-2xl p-4 text-center sm:text-right flex items-center gap-4 flex-shrink-0 backdrop-blur">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl border border-amber-500/30">
+                    <i class="fa-solid fa-id-badge"></i>
+                </div>
+                <div>
+                    <span class="block text-[11px] text-slate-400 font-semibold uppercase">Student ID</span>
+                    <strong class="text-lg text-amber-300 font-mono tracking-wider">{{ student.student_id }}</strong>
+                    <span class="block text-[10px] text-slate-400 mt-0.5">{{ student.whatsapp_number }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Course Progress Bar (Requirement 5: e.g. Quran Translation — 60% Complete) -->
+        <div class="mt-8 pt-6 border-t border-emerald-800/80">
+            <div class="flex items-center justify-between text-xs font-bold text-emerald-200 mb-2">
+                <span class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-chart-line text-amber-400"></i>
+                    <span>تعلیمی پیش رفت (Course Progress): <strong>{{ student.requested_course }}</strong></span>
+                </span>
+                <span class="text-amber-300 font-mono text-sm">{{ progress_pct }}% مکمل (Complete)</span>
+            </div>
+            <div class="w-full h-3.5 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-emerald-700/60">
+                <div class="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-amber-500 rounded-full transition-all duration-700" style="width: {{ progress_pct }}%;"></div>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-400 mt-2">
+                <span>مکمل شدہ اسباق: {{ completed_lessons }} از {{ total_lessons }}</span>
+                <a href="/student/courses" class="text-amber-300 hover:underline font-bold">تمام اسباق دیکھیں ←</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Classroom Alert Card if Live (Requirement 11) -->
+    {% if classroom and classroom.is_live %}
+    <div class="bg-gradient-to-r from-red-600 to-rose-700 rounded-2xl p-4 sm:p-5 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 live-indicator-pulse">
+        <div class="flex items-center gap-3 text-center sm:text-right">
+            <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">
+                <i class="fa-solid fa-video"></i>
+            </div>
+            <div>
+                <h3 class="text-base font-extrabold">استاد محترم کی لائیو کلاس ابھی جاری ہے!</h3>
+                <p class="text-xs text-red-100">کلاس کا نام: {{ classroom.name }} • براہ راست شرکت کے لیے جوائن کریں</p>
+            </div>
+        </div>
+        <a href="/classroom/student" class="px-6 py-3 rounded-xl bg-white text-red-700 hover:bg-red-50 font-bold text-xs shadow-lg transition flex items-center gap-2 flex-shrink-0">
+            <i class="fa-solid fa-door-open"></i>
+            <span>کلاس میں شامل ہوں (Join Classroom)</span>
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Action Cards Grid (Requirement 5) -->
+    <div>
+        <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-emerald-700"></i>
+            <span>اہم تعلیمی ماڈیولز (Dashboard Cards)</span>
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 1. 📚 My Courses (میرے کورسز) -->
+            <a href="/student/courses" class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col group border-t-4 border-emerald-600">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                    </div>
+                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold font-mono">
+                        {{ courses|length }} کورسز
+                    </span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition">📚 میرے کورسز (My Courses)</h3>
+                <p class="text-xs text-slate-600 font-urdu mt-1 flex-1 leading-relaxed">
+                    اپنے منتخب کورس کے تمام اسباق، پی ڈی ایف نوٹس اور ریکارڈنگز دیکھیں۔
+                </p>
+                <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-700">
+                    <span>اسباق پر جائیں</span>
+                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                </div>
+            </a>
+
+            <!-- 2. 💻 My Classroom (میرا کلاس روم) -->
+            <a href="/classroom/student" class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col group border-t-4 border-indigo-600">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                    </div>
+                    <span class="px-3 py-1 rounded-full {% if classroom and classroom.is_live %}bg-emerald-100 text-emerald-800{% else %}bg-slate-100 text-slate-600{% endif %} text-xs font-bold">
+                        {% if classroom and classroom.is_live %}● لائیو سیشن{% else %}آف لائن{% endif %}
+                    </span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 group-hover:text-indigo-700 transition">💻 میرا کلاس روم (My Classroom)</h3>
+                <p class="text-xs text-slate-600 font-urdu mt-1 flex-1 leading-relaxed">
+                    استاد کے ساتھ لائیو وڈیو، پی ڈی ایف کتاب اور ریئل ٹائم بورڈ کے ذریعے سبق پڑھیں۔
+                </p>
+                <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-700">
+                    <span>کلاس روم میں داخل ہوں</span>
+                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                </div>
+            </a>
+
+            <!-- 3. 📖 Quran (تلاوتِ قرآن) -->
+            <a href="/quran" class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col group border-t-4 border-amber-500">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-quran"></i>
+                    </div>
+                    <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
+                        114 سورتیں
+                    </span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 group-hover:text-amber-600 transition">📖 تلاوتِ قرآن (Quran Recitation)</h3>
+                <p class="text-xs text-slate-600 font-urdu mt-1 flex-1 leading-relaxed">
+                    مکمل قرآن پاک تجوید فونٹ، سلیس اردو ترجمہ اور تلاوتِ آڈیو کے ساتھ سنیں اور پڑھیں۔
+                </p>
+                <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-amber-600">
+                    <span>قرآن ریڈر کھولیں</span>
+                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                </div>
+            </a>
+
+            <!-- 4. 🔤 Noorani Qaida (نورانی قاعدہ) -->
+            <a href="/qaida" class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col group border-t-4 border-teal-600">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-spell-check"></i>
+                    </div>
+                    <span class="px-3 py-1 rounded-full bg-teal-100 text-teal-800 text-xs font-bold">
+                        صوتی مشقیں
+                    </span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 group-hover:text-teal-700 transition">🔤 نورانی قاعدہ (Noorani Qaida)</h3>
+                <p class="text-xs text-slate-600 font-urdu mt-1 flex-1 leading-relaxed">
+                    مخارج، حروفِ مفردات، حرکات، تنوین اور مد کی انٹرایکٹو آواز کے ساتھ پریکٹس کریں۔
+                </p>
+                <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-teal-700">
+                    <span>قاعدہ پریکٹس شروع کریں</span>
+                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                </div>
+            </a>
+
+            <!-- 5. 📚 Library (اسلامی کتب خانہ) -->
+            <a href="/library" class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col group border-t-4 border-blue-600">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
+                        ڈیجیٹل کتب
+                    </span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition">📚 کتب خانہ (Islamic Library)</h3>
+                <p class="text-xs text-slate-600 font-urdu mt-1 flex-1 leading-relaxed">
+                    مستند تفاسیر، احادیث نبوی، مسنون دعائیں اور فقہی کتابیں پڑھیں اور ڈاؤنلوڈ کریں۔
+                </p>
+                <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-700">
+                    <span>کتب کا مطالعہ کریں</span>
+                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                </div>
+            </a>
+
+            <!-- 6. 📞 Contact Teacher (استاد سے رابطہ) -->
+            {% if contact and contact.whatsapp_number %}
+            <a href="https://wa.me/{{ contact.whatsapp_number|replace(' ', '')|replace('+', '') }}?text=السلام علیکم استاد محترم! میں طالب علم {{ student.full_name }} (آئی ڈی: {{ student.student_id }}) ہوں۔ مجھے کلاس کے متعلق رہنمائی چاہیے تھی۔" target="_blank" class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col group border-t-4 border-emerald-500">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-brands fa-whatsapp text-3xl"></i>
+                    </div>
+                    <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
+                        واٹس ایپ آن لائن
+                    </span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition">📞 استاد سے رابطہ (Contact Teacher)</h3>
+                <p class="text-xs text-slate-600 font-urdu mt-1 flex-1 leading-relaxed">
+                    استاد محترم {{ contact.teacher_name }} سے کسی بھی مسئلے یا سبق کے لیے براہ راست واٹس ایپ پر رابطہ کریں۔
+                </p>
+                <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600">
+                    <span>میسج بھیجیں</span>
+                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition"></i>
+                </div>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Notifications Section (Requirement 4) -->
+    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+        <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-bell text-amber-500"></i>
+            <span>اہم اعلانات و پیغامات (Notifications)</span>
+        </h3>
+        <div class="space-y-3">
+            {% for n in notifications %}
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
+                    <i class="fa-solid fa-bullhorn"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-xs font-bold text-slate-900">{{ n.title }}</h4>
+                    <p class="text-xs text-slate-600 mt-1 font-urdu leading-relaxed">{{ n.message }}</p>
+                    <span class="text-[10px] text-slate-400 mt-1 block">{{ n.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-xs text-slate-500 text-center py-4">فی الحال کوئی نیا اعلان موجود نہیں ہے۔</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

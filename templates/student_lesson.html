@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} — دار التعلیم والقرآن{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <!-- Breadcrumb & Back -->
+    <div class="flex items-center justify-between">
+        <a href="/student/courses" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+            <i class="fa-solid fa-arrow-right"></i>
+            <span>واپس اسباق کی فہرست پر جائیں</span>
+        </a>
+        <span class="text-xs text-slate-500 font-semibold">
+            {{ course.title_urdu or course.title }} • سبق نمبر {{ lesson.lesson_number }}
+        </span>
+    </div>
+
+    <!-- Lesson Main Card -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+            <div>
+                <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold font-mono">
+                    Lesson #{{ lesson.lesson_number }}
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">{{ lesson.title }}</h1>
+            </div>
+
+            <!-- Complete Toggle Button -->
+            <button id="toggleCompleteBtn" onclick="toggleComplete({{ lesson.id }})" class="px-5 py-2.5 rounded-xl {% if is_completed %}bg-emerald-600 text-white{% else %}bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700{% endif %} text-xs font-bold transition flex items-center gap-2 border border-slate-300">
+                <i class="fa-solid fa-circle-check {% if is_completed %}text-white{% else %}text-slate-400{% endif %}" id="checkIcon"></i>
+                <span id="completeStatusText">{% if is_completed %}مکمل شدہ (Completed){% else %}مکمل کے طور پر نشان لگائیں{% endif %}</span>
+            </button>
+        </div>
+
+        <!-- Description -->
+        {% if lesson.description %}
+        <div class="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-4 text-xs sm:text-sm text-slate-700 font-urdu leading-relaxed">
+            <strong class="text-amber-800 block mb-1">سبق کا خلاصہ و مقصد:</strong>
+            {{ lesson.description }}
+        </div>
+        {% endif %}
+
+        <!-- Video Player (If URL provided) -->
+        {% if lesson.video_url %}
+        <div class="space-y-2">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-video text-emerald-600"></i> ویڈیو لیکچر (Video Lecture)
+            </h3>
+            <div class="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-md">
+                <iframe src="{{ lesson.video_url }}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Audio Player (If URL provided) -->
+        {% if lesson.audio_url %}
+        <div class="bg-slate-900 text-white rounded-2xl p-5 space-y-3">
+            <h3 class="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-headphones"></i> صوتی تلاوت و ریکارڈنگ (Audio Recording)
+            </h3>
+            <audio controls class="w-full">
+                <source src="{{ lesson.audio_url }}" type="audio/mpeg">
+                آپ کا براؤزر آڈیو پلیئر سپورٹ نہیں کرتا۔
+            </audio>
+        </div>
+        {% endif %}
+
+        <!-- PDF Notes / Attached Material -->
+        {% if lesson.pdf_file %}
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-2xl flex-shrink-0">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-slate-900">سبق کا پی ڈی ایف مواد (Study Notes)</h4>
+                    <p class="text-xs text-slate-500">استاد محترم کے تیار کردہ اہم نکات و مشقیں</p>
+                </div>
+            </div>
+            <a href="{{ lesson.pdf_file }}" target="_blank" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-download"></i>
+                <span>پی ڈی ایف کھولیں / ڈاؤنلوڈ کریں</span>
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Detailed Content Text -->
+        {% if lesson.content_text %}
+        <div class="pt-4 border-t border-slate-100 space-y-3">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">تفصیلی درسی مواد (Lesson Content):</h3>
+            <div class="prose max-w-none text-sm text-slate-700 font-urdu leading-loose whitespace-pre-line bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                {{ lesson.content_text }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Navigation Buttons -->
+        <div class="pt-6 border-t border-slate-100 flex items-center justify-between text-xs font-bold">
+            <a href="/student/courses" class="text-slate-600 hover:text-emerald-700 transition">
+                ← تمام اسباق
+            </a>
+            <a href="/classroom/student" class="text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-video"></i>
+                <span>لائیو کلاس روم میں جائیں</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function toggleComplete(lessonId) {
+        const btn = document.getElementById('toggleCompleteBtn');
+        const text = document.getElementById('completeStatusText');
+        const icon = document.getElementById('checkIcon');
+
+        try {
+            const resp = await fetch(`/api/students/progress/${lessonId}`, {
+                method: 'POST'
+            });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                if (data.is_completed) {
+                    btn.className = 'px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-bold transition flex items-center gap-2 border border-slate-300';
+                    text.innerText = 'مکمل شدہ (Completed)';
+                    icon.className = 'fa-solid fa-circle-check text-white';
+                } else {
+                    btn.className = 'px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 text-xs font-bold transition flex items-center gap-2 border border-slate-300';
+                    text.innerText = 'مکمل کے طور پر نشان لگائیں';
+                    icon.className = 'fa-solid fa-circle-check text-slate-400';
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+</script>
+{% endblock %}

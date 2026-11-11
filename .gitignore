@@ -22,7 +22,23 @@ __pycache__/
 
 # Uploaded Files / Media (صارفین کی اپلوڈ کردہ کتابیں/پی ڈی ایف)
 uploads/books/*
-!uploads/books/.gitkeep
+!uploads/books/.gitkeep# OS & System generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Editor & IDE specific folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test / Temporary files
+test.txt
+test_e2e.py
+*.log
 
 # Temporary & Test files
 test.txt
@@ -33,4 +49,35 @@ test.txt
 .idea/
 Thumbs.db
 Desktop.ini
+.DS_Store
+# Python Virtual Environment
+venv/
+env/
+ENV/
+
+# Python compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environment variables (Sensitive data)
+.env
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+online_teaching.db
+
+# User uploads / Media files
+uploads/
+
+# IDE files (VS Code)
+.vscode/
+.idea/
+
+# OS generated files
+Thumbs.db
 .DS_Store

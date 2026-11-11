@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}آن لائن کورسز — دار التعلیم والقرآن اکیڈمی{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    <!-- Header -->
+    <div class="text-center max-w-3xl mx-auto space-y-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
+            <i class="fa-solid fa-graduation-cap text-emerald-600"></i>
+            <span>مستند نصاب و اسباق</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">آن لائن اسلامی تعلیمی کورسز</h1>
+        <p class="text-xs sm:text-sm text-slate-600 font-urdu leading-relaxed">
+            دار التعلیم والقرآن میں تجوید، ترجمہ و تفسیر، فقہ و اذکار کے لیے خاص ترتیب دیئے گئے کورسز میں داخلہ لیں۔
+        </p>
+    </div>
+
+    <!-- Courses Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for course in courses %}
+        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition duration-300 flex flex-col group">
+            <div class="relative h-48 overflow-hidden bg-slate-900">
+                <img src="{{ course.thumbnail_url or '/static/images/green_dome.svg' }}" alt="{{ course.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                <span class="absolute top-3 right-3 px-3 py-1 rounded-xl bg-emerald-900/90 text-amber-300 text-xs font-bold backdrop-blur">
+                    {{ course.category }}
+                </span>
+                <span class="absolute bottom-3 right-3 text-xs text-slate-300 font-medium">
+                    <i class="fa-solid fa-clock ml-1 text-amber-400"></i> {{ course.duration }}
+                </span>
+            </div>
+
+            <div class="p-6 flex-1 flex flex-col">
+                <h3 class="text-xl font-bold text-slate-900 group-hover:text-emerald-700 transition">
+                    {{ course.title_urdu or course.title }}
+                </h3>
+                <p class="text-xs text-slate-500 font-semibold mb-3">{{ course.title }}</p>
+
+                <p class="text-xs text-slate-600 font-urdu leading-relaxed flex-1 mb-6">
+                    {{ course.description }}
+                </p>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                    <a href="/courses/{{ course.slug }}" class="flex-1 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition text-center">
+                        تفصیلات و سلیبس
+                    </a>
+                    <a href="/join" class="flex-1 py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold transition text-center shadow-sm">
+                        داخلہ لیں
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -6,18 +6,18 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from database import init_db
-from routers import auth, teacher, student, websocket, views
+from routers import auth, teacher, student, student_auth, admin_management, websocket, views
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize database tables and single permanent classroom
+    # Initialize database tables, seed courses, books, settings & single permanent classroom
     init_db()
     yield
 
 app = FastAPI(
     title=settings.APP_NAME,
-    description="Modern, Secure Single-Teacher Online Teaching & Learning Web App with WebRTC Video & Live PDF Sync",
-    version="1.0.0",
+    description="دار التعلیم والقرآن — Comprehensive Islamic Education Platform with Student Admission & Admin Management System",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -30,18 +30,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount Static Files
+# Mount Static Files & Uploads
 os.makedirs("static/css", exist_ok=True)
 os.makedirs("static/js", exist_ok=True)
 os.makedirs("static/images", exist_ok=True)
 os.makedirs("uploads/books", exist_ok=True)
+os.makedirs("uploads/lessons", exist_ok=True)
+os.makedirs("uploads/covers", exist_ok=True)
+os.makedirs("uploads/videos", exist_ok=True)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Register Routers
 app.include_router(auth.router)
 app.include_router(teacher.router)
 app.include_router(student.router)
+app.include_router(student_auth.router)
+app.include_router(admin_management.router)
 app.include_router(websocket.router)
 app.include_router(views.router)
 

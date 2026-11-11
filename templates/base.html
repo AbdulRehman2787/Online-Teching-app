@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ur" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    <!-- Favicon / App Logo -->
+    <link rel="icon" type="image/svg+xml" href="/static/images/app_logo.svg">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,13 +14,12 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                            900: '#312e81',
+                        emerald: {
+                            850: '#044e37',
+                            950: '#022319',
+                        },
+                        amber: {
+                            450: '#f59e0b',
                         }
                     }
                 }
@@ -27,13 +28,217 @@
     </script>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom Styles & Islamic Fonts -->
     <link rel="stylesheet" href="/static/css/custom.css">
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-slate-50 text-slate-800 font-['Inter'] antialiased min-h-screen flex flex-col">
-    {% block content %}{% endblock %}
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col content-with-bottom-nav">
+
+    <!-- Top Announcement Bar -->
+    <div class="bg-emerald-950 text-amber-300 text-xs py-1.5 px-4 text-center font-medium border-b border-emerald-900/50 flex items-center justify-between">
+        <div class="hidden sm:flex items-center gap-3 text-slate-300">
+            <span><i class="fa-solid fa-graduation-cap text-amber-400 ml-1"></i> دار التعلیم والقرآن آن لائن اکیڈمی</span>
+            {% if contact and contact.phone_number %}
+            <span class="text-slate-400">| <i class="fa-solid fa-phone text-emerald-400 ml-1"></i> {{ contact.phone_number }}</span>
+            {% endif %}
+        </div>
+        <div class="mx-auto sm:mx-0 font-arabic text-amber-200 text-sm">
+            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+        </div>
+        <div class="hidden sm:flex items-center gap-3">
+            {% if contact and contact.whatsapp_number %}
+            <a href="https://wa.me/{{ contact.whatsapp_number|replace(' ', '')|replace('+', '') }}" target="_blank" class="hover:text-amber-200 transition flex items-center gap-1">
+                <i class="fa-brands fa-whatsapp text-emerald-400 text-sm"></i> واٹس ایپ رابطہ
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200/80 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="/" class="flex items-center gap-3 group">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-900 p-1.5 shadow-md shadow-emerald-900/20 group-hover:scale-105 transition duration-300 flex items-center justify-center">
+                    <img src="/static/images/app_logo.svg" alt="App Logo" class="w-full h-full object-contain">
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-extrabold text-emerald-900 tracking-tight leading-snug">دار التعلیم والقرآن</h1>
+                    <p class="text-[11px] text-amber-600 font-semibold tracking-wider">Islamic Education Platform</p>
+                </div>
+            </a>
+
+            <!-- Desktop Nav Links -->
+            <nav class="hidden lg:flex items-center gap-5 text-sm font-semibold text-slate-700">
+                <a href="/" class="hover:text-emerald-700 transition flex items-center gap-1.5"><i class="fa-solid fa-house text-emerald-600"></i> ہوم</a>
+                <a href="/online-class" class="text-rose-700 font-bold bg-rose-50 hover:bg-rose-100 transition px-3 py-1 rounded-xl border border-rose-200/80 flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-video text-rose-600 animate-pulse"></i>
+                    <span>آن لائن کلاس (Zoom)</span>
+                </a>
+                <a href="/courses" class="hover:text-emerald-700 transition flex items-center gap-1.5"><i class="fa-solid fa-book-bookmark text-emerald-600"></i> کورسز</a>
+                <a href="/quran" class="hover:text-emerald-700 transition flex items-center gap-1.5"><i class="fa-solid fa-quran text-emerald-600"></i> تلاوتِ قرآن</a>
+                <a href="/daily-videos" class="hover:text-emerald-700 transition flex items-center gap-1.5"><i class="fa-solid fa-circle-play text-emerald-600"></i> روزانہ ویڈیوز</a>
+                <a href="/qaida" class="hover:text-emerald-700 transition flex items-center gap-1.5"><i class="fa-solid fa-spell-check text-emerald-600"></i> قاعدہ</a>
+                <a href="/library" class="hover:text-emerald-700 transition flex items-center gap-1.5"><i class="fa-solid fa-book-open text-emerald-600"></i> کتب خانہ</a>
+                <a href="/contact" class="hover:text-emerald-700 transition flex items-center gap-1.5"><i class="fa-solid fa-headset text-emerald-600"></i> رابطہ</a>
+            </nav>
+
+            <!-- User Status / Action Buttons -->
+            <div class="flex items-center gap-3">
+                {% if teacher %}
+                    <!-- Admin Logged In -->
+                    <div class="flex items-center gap-2">
+                        <a href="/admin/dashboard" class="px-3.5 py-2 rounded-xl bg-emerald-800 text-white hover:bg-emerald-700 text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                            <span>ایڈمن پینل</span>
+                        </a>
+                        <a href="/admin/logout" title="لاگ آؤٹ" class="p-2 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 transition text-sm">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                {% elif student %}
+                    <!-- Student Logged In -->
+                    <div class="flex items-center gap-2">
+                        <a href="/student/dashboard" class="px-3.5 py-2 rounded-xl bg-emerald-700 text-white hover:bg-emerald-600 text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-user-graduate text-amber-300"></i>
+                            <span>ڈیش بورڈ ({{ student.full_name|truncate(12) }})</span>
+                        </a>
+                        <a href="/student/logout" title="لاگ آؤٹ" class="p-2 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 transition text-sm">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <!-- Public Guest -->
+                    <a href="/login" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-right-to-bracket text-emerald-700"></i>
+                        <span>لاگ ان</span>
+                    </a>
+                    <a href="/join" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-800/20 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-graduation-cap text-amber-300"></i>
+                        <span>کلاس میں شامل ہوں</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Content -->
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-300 border-t border-slate-800 pt-12 pb-24 sm:pb-12 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <!-- Col 1: About -->
+                <div class="md:col-span-2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-800 p-1.5 flex items-center justify-center">
+                            <img src="/static/images/app_logo.svg" alt="Logo" class="w-full h-full object-contain">
+                        </div>
+                        <h2 class="text-xl font-bold text-white">دار التعلیم والقرآن اکیڈمی</h2>
+                    </div>
+                    <p class="text-sm text-slate-400 leading-relaxed font-urdu mb-4">
+                        ایک مکمل اور محفوظ آن لائن اسلامی تعلیمی پلیٹ فارم جہاں قرآن مجید تجوید، ترجمہ و تفسیر، نورانی قاعدہ، مسنون دعائیں اور بنیادی احکامِ دین کی منظم اور معیاری تدریس کی جاتی ہے۔
+                    </p>
+                    <div class="text-xs text-amber-300 font-arabic bg-emerald-950/70 p-3 rounded-xl border border-emerald-900/80">
+                        «خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ» — تم میں سے بہترین شخص وہ ہے جو قرآن سیکھے اور سکھائے۔
+                    </div>
+                </div>
+
+                <!-- Col 2: Quick Links -->
+                <div>
+                    <h3 class="text-white text-sm font-bold uppercase tracking-wider mb-4 border-r-2 border-emerald-500 pr-2">فوری روابط</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="/" class="hover:text-emerald-400 transition">ہوم پیج</a></li>
+                        <li><a href="/online-class" class="text-rose-400 hover:text-rose-300 font-bold transition flex items-center gap-1.5"><i class="fa-solid fa-video text-xs"></i> آن لائن کلاس (Zoom)</a></li>
+                        <li><a href="/courses" class="hover:text-emerald-400 transition">آن لائن کورسز</a></li>
+                        <li><a href="/quran" class="hover:text-emerald-400 transition">تلاوتِ قرآن مجید</a></li>
+                        <li><a href="/daily-videos" class="hover:text-emerald-400 transition">روزانہ کی ویڈیوز و اسباق</a></li>
+                        <li><a href="/qaida" class="hover:text-emerald-400 transition">نورانی قاعدہ پریکٹس</a></li>
+                        <li><a href="/library" class="hover:text-emerald-400 transition">اسلامی کتب خانہ</a></li>
+                        <li><a href="/join" class="hover:text-amber-400 text-amber-300 font-semibold transition">داخلہ فارم (کلاس میں شامل ہوں)</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Contact Info -->
+                <div>
+                    <h3 class="text-white text-sm font-bold uppercase tracking-wider mb-4 border-r-2 border-emerald-500 pr-2">رابطہ کی معلومات</h3>
+                    <ul class="space-y-3 text-sm text-slate-400">
+                        {% if contact %}
+                            <li class="flex items-center gap-2">
+                                <i class="fa-solid fa-user-tie text-emerald-400"></i>
+                                <span>{{ contact.teacher_name }}</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fa-brands fa-whatsapp text-emerald-400 text-base"></i>
+                                <a href="https://wa.me/{{ contact.whatsapp_number|replace(' ', '')|replace('+', '') }}" target="_blank" class="hover:text-emerald-300 ltr-text font-mono">{{ contact.whatsapp_number }}</a>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fa-solid fa-envelope text-emerald-400"></i>
+                                <span class="font-mono text-xs">{{ contact.email }}</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fa-solid fa-location-dot text-emerald-400"></i>
+                                <span>{{ contact.address }}</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="pt-8 border-t border-slate-800 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p>© 2026 دار التعلیم والقرآن اکیڈمی — جملہ حقوق محفوظ ہیں۔</p>
+                <div class="flex items-center gap-4">
+                    <a href="/contact" class="hover:text-slate-400 transition">پرائیویسی و پالیسی</a>
+                    <span>•</span>
+                    <a href="/login?role=admin" class="hover:text-emerald-400 transition text-slate-400"><i class="fa-solid fa-lock text-[10px]"></i> ایڈمن لاگ ان</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bottom Navigation Bar for Mobile (Requirement 1 & 2) -->
+    <nav class="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t border-slate-200/80 px-2 py-2 flex items-center justify-around z-50 lg:hidden shadow-lg shadow-slate-900/10">
+        <a href="/" class="flex flex-col items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-emerald-700 transition">
+            <i class="fa-solid fa-house text-base text-emerald-700"></i>
+            <span>ہوم</span>
+        </a>
+        <a href="/online-class" class="flex flex-col items-center gap-1 text-[11px] font-bold text-rose-700 transition">
+            <i class="fa-solid fa-video text-base text-rose-600 animate-pulse"></i>
+            <span>کلاس</span>
+        </a>
+        <a href="/quran" class="flex flex-col items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-emerald-700 transition">
+            <i class="fa-solid fa-quran text-base text-amber-600"></i>
+            <span>قرآن</span>
+       <!-- </a>
+        <a href="/daily-videos" class="flex flex-col items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-emerald-700 transition">
+            <i class="fa-solid fa-circle-play text-base text-emerald-600"></i>
+            <span>ویڈیوز</span>-->
+        </a>
+        <a href="/courses" class="flex flex-col items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-emerald-700 transition">
+            <i class="fa-solid fa-book-bookmark text-base"></i>
+            <span>کورسز</span>
+        </a>
+        {% if student %}
+            <a href="/student/dashboard" class="flex flex-col items-center gap-1 text-[11px] font-bold text-emerald-700">
+                <i class="fa-solid fa-user-graduate text-base"></i>
+                <span>ڈیش بورڈ</span>
+            </a>
+        {% elif teacher %}
+            <a href="/admin/dashboard" class="flex flex-col items-center gap-1 text-[11px] font-bold text-emerald-700">
+                <i class="fa-solid fa-shield-halved text-base"></i>
+                <span>ایڈمن</span>
+            </a>
+        {% else %}
+            <a href="/join" class="flex flex-col items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-xl">
+                <i class="fa-solid fa-graduation-cap text-base"></i>
+                <span>داخلہ</span>
+            </a>
+        {% endif %}
+    </nav>
+
     {% block scripts %}{% endblock %}
 </body>
 </html>

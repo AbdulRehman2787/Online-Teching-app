@@ -1,57 +1,176 @@
 {% extends "base.html" %}
 
-{% block title %}Join Live Classroom | {{ classroom.name }}{% endblock %}
+{% block title %}آن لائن داخلہ فارم — دار التعلیم والقرآن اکیڈمی{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950">
-    <div class="max-w-md w-full glass-dark text-white rounded-3xl p-8 shadow-2xl border border-indigo-500/30">
-        <!-- Logo / Icon -->
+<div class="min-h-[85vh] py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center bg-gradient-to-b from-slate-100 via-emerald-50/40 to-slate-100">
+    <div class="max-w-xl w-full bg-white rounded-3xl shadow-xl border border-slate-200/80 p-6 sm:p-10 relative overflow-hidden">
+        <!-- Top Emerald Accent Bar -->
+        <div class="absolute top-0 inset-x-0 h-2.5 bg-gradient-to-r from-emerald-600 via-amber-400 to-emerald-800"></div>
+
+        <!-- Header -->
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 mb-4 shadow-lg">
-                <i class="fa-solid fa-graduation-cap text-3xl"></i>
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-800 text-white p-2 shadow-lg shadow-emerald-900/20 mb-4 flex items-center justify-center">
+                <img src="/static/images/app_logo.svg" alt="Logo" class="w-full h-full object-contain">
             </div>
-            <h1 class="text-2xl font-bold tracking-tight">Student Classroom Portal</h1>
-            <p class="text-sm text-indigo-300 font-semibold mt-1">{{ classroom.name }}</p>
-            <p class="text-xs text-slate-400 mt-2">Enter your name and the class password to join the live session.</p>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">کلاس میں شامل ہوں (آن لائن داخلہ)</h1>
+            <p class="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Student Admission & Class Registration</p>
+            <p class="text-xs text-slate-600 font-urdu mt-2">
+                برائے مہربانی صرف بنیادی معلومات درج کریں۔ ایڈمن کی منظوری کے بعد آپ کو واٹس ایپ پر لاگ ان تفصیلات موصول ہو جائیں گی۔
+            </p>
         </div>
 
-        <!-- Alert -->
-        <div id="alertBox" class="hidden mb-6 p-4 rounded-2xl text-sm font-medium"></div>
+        <!-- Success Message Box (Shown after submission - Requirement 2) -->
+        <div id="successBox" class="hidden mb-6 p-6 rounded-2xl bg-emerald-50 border border-emerald-300 text-slate-800 text-center space-y-4">
+            <div class="w-14 h-14 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center text-2xl shadow-lg">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h3 class="text-lg font-extrabold text-emerald-900 font-urdu">
+                آپ کی درخواست موصول ہو گئی ہے۔ ایڈمن کی منظوری کے بعد آپ کلاس میں شامل ہو سکیں گے۔
+            </h3>
+            <p class="text-xs text-slate-600 font-urdu leading-relaxed">
+                ہماری ٹیم جلد آپ کے واٹس ایپ نمبر پر رابطہ کر کے کلاس کا شیڈول اور پاسورڈ ارسال کر دے گی۔
+            </p>
 
-        <!-- Form -->
-        <form id="joinForm" class="space-y-4">
+            <div id="studentIdNotice" class="bg-white p-3 rounded-xl border border-emerald-200 text-xs text-slate-700">
+                <span>آپ کا عارضی ریفرنس آئی ڈی: </span>
+                <strong id="displayStudentId" class="text-emerald-700 font-mono text-sm font-bold"></strong>
+            </div>
+
+            <!-- Direct WhatsApp shortcut to inform teacher -->
+            <div class="pt-2">
+                <a id="waDirectLink" href="#" target="_blank" class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-base"></i>
+                    <span>واٹس ایپ پر استاد محترم کو فوری اطلاع دیں</span>
+                </a>
+            </div>
+
+            <div class="pt-2">
+                <a href="/" class="text-xs font-bold text-slate-500 hover:text-emerald-700 transition">
+                    ہوم پیج پر واپس جائیں
+                </a>
+            </div>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="errorAlert" class="hidden mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-base"></i>
+            <span id="errorMessage"></span>
+        </div>
+
+        <!-- SIMPLE STUDENT JOIN FORM (REQUIREMENT 2) -->
+        <form id="admissionForm" class="space-y-4">
+            <!-- 1. Student Name -->
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Your Full Name</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    طالب علم کا مکمل نام (Student Name) <span class="text-red-500">*</span>
+                </label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-regular fa-user"></i></span>
-                    <input type="text" id="studentName" required placeholder="e.g. Bilal Khan"
-                        class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    <input type="text" id="studentName" required placeholder="مثلاً: محمد عبداللہ / عائشہ بی بی"
+                        class="w-full pr-10 pl-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white text-sm transition">
                 </div>
             </div>
 
+            <!-- 2. Parent / Guardian Name -->
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Classroom Password</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    والد / سرپرست کا نام (Parent / Guardian Name) <span class="text-red-500">*</span>
+                </label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-solid fa-key"></i></span>
-                    <input type="password" id="classPassword" required placeholder="Enter class password"
-                        class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
+                        <i class="fa-solid fa-user-group"></i>
+                    </span>
+                    <input type="text" id="parentName" required placeholder="مثلاً: محمد فاروق صاحب"
+                        class="w-full pr-10 pl-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white text-sm transition">
                 </div>
             </div>
 
-            <button type="submit" id="joinBtn"
-                class="w-full mt-6 py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-white shadow-lg shadow-indigo-600/30 transition duration-200 flex items-center justify-center gap-2">
-                <span>Enter Classroom</span>
-                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            <!-- 3. WhatsApp Number -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    واٹس ایپ نمبر (WhatsApp Number) <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-emerald-600">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                    </span>
+                    <input type="tel" id="whatsappNumber" required placeholder="مثلاً: 03001234567 یا +923001234567" dir="ltr"
+                        class="w-full pr-10 pl-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white text-sm text-right font-mono transition">
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">تمام ضروری کلاسیز اور پاسورڈ کی تفصیلات اسی نمبر پر بھیجی جائیں گی۔</p>
+            </div>
+
+            <!-- 4. Country & Age (Grid) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Country -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                        ملک (Country) <span class="text-red-500">*</span>
+                    </label>
+                    <select id="country" required class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white text-sm transition">
+                        <option value="Pakistan" selected>پاکستان (Pakistan)</option>
+                        <option value="United Kingdom">برطانیہ (United Kingdom)</option>
+                        <option value="United States">امریکہ (USA)</option>
+                        <option value="Canada">کینیڈا (Canada)</option>
+                        <option value="Saudi Arabia">سعودی عرب (Saudi Arabia)</option>
+                        <option value="United Arab Emirates">متحدہ عرب امارات (UAE)</option>
+                        <option value="Australia">آسٹریلیا (Australia)</option>
+                        <option value="Other">دیگر (Other)</option>
+                    </select>
+                </div>
+
+                <!-- Age -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                        عمر (Age) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" id="age" min="4" max="90" required placeholder="مثلاً: 12"
+                        class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white text-sm transition">
+                </div>
+            </div>
+
+            <!-- 5. Optional Email -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    ای میل ایڈریس (Optional Email) <span class="text-xs text-slate-400 font-normal">(اختیاری)</span>
+                </label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
+                        <i class="fa-regular fa-envelope"></i>
+                    </span>
+                    <input type="email" id="email" placeholder="example@gmail.com" dir="ltr"
+                        class="w-full pr-10 pl-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white text-sm text-right transition">
+                </div>
+            </div>
+
+            <!-- 6. Class / Subject Selection -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    کلاس / کورس کا انتخاب (Class / Subject Selection) <span class="text-red-500">*</span>
+                </label>
+                <select id="requestedCourse" required class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white text-sm transition font-medium">
+                    <option value="نورانی قاعدہ مع تجوید" selected>نورانی قاعدہ مع تجوید (Noorani Qaida)</option>
+                    <option value="ترجمۃ القرآن الکریم">ترجمۃ القرآن الکریم (Quran Translation)</option>
+                    <option value="تفسیر القرآن الکریم">تفسیر القرآن الکریم (Quran Tafseer)</option>
+                    <option value="مسنون دعائیں اور اذکار">مسنون دعائیں اور اذکار (Masnoon Duain)</option>
+                    <option value="چالیس احادیث نبوی">چالیس احادیث نبوی (Forty Ahadith)</option>
+                    <option value="نماز اور بنیادی طہارت کورس">نماز اور بنیادی طہارت کورس (Namaz Course)</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submitBtn" class="w-full mt-6 py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-base shadow-xl shadow-emerald-800/25 transition duration-200 flex items-center justify-center gap-2">
+                <span>درخواست جمع کروائیں</span>
+                <i class="fa-solid fa-paper-plane text-amber-300"></i>
             </button>
         </form>
 
-        <div class="mt-8 pt-6 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <span class="flex items-center gap-1.5">
-                <i class="fa-solid fa-users text-indigo-400"></i> Max 20 Students
-            </span>
-            <span class="flex items-center gap-1.5">
-                <i class="fa-solid fa-lock text-emerald-400"></i> Secure Session
-            </span>
+        <div class="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>پہلے سے منظور شدہ طالب علم ہیں؟</span>
+            <a href="/login" class="text-emerald-700 font-bold hover:underline">یہاں سے لاگ ان کریں</a>
         </div>
     </div>
 </div>
@@ -59,58 +178,61 @@
 
 {% block scripts %}
 <script>
-    const form = document.getElementById('joinForm');
-    const alertBox = document.getElementById('alertBox');
-    const joinBtn = document.getElementById('joinBtn');
+    const form = document.getElementById('admissionForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const successBox = document.getElementById('successBox');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const studentName = document.getElementById('studentName').value.trim();
-        const classPassword = document.getElementById('classPassword').value.trim();
+        errorAlert.classList.add('hidden');
 
-        joinBtn.disabled = true;
-        joinBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Verifying...';
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>درخواست بھیجی جا رہی ہے...</span>';
+
+        const payload = {
+            student_name: document.getElementById('studentName').value.trim(),
+            parent_name: document.getElementById('parentName').value.trim(),
+            whatsapp_number: document.getElementById('whatsappNumber').value.trim(),
+            country: document.getElementById('country').value,
+            age: parseInt(document.getElementById('age').value) || null,
+            email: document.getElementById('email').value.trim() || null,
+            requested_course: document.getElementById('requestedCourse').value
+        };
 
         try {
-            const res = await fetch('/api/student/verify-join', {
+            const resp = await fetch('/api/students/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    student_name: studentName,
-                    class_password: classPassword
-                })
+                body: JSON.stringify(payload)
             });
+            const data = await resp.json();
 
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.detail || 'Could not join classroom.');
+            if (resp.ok && data.success) {
+                form.classList.add('hidden');
+                successBox.classList.remove('hidden');
+                document.getElementById('displayStudentId').innerText = data.student_id;
+
+                // Setup WhatsApp direct link to teacher
+                {% if contact and contact.whatsapp_number %}
+                const teacherWa = "{{ contact.whatsapp_number|replace(' ', '')|replace('+', '') }}";
+                const msg = encodeURIComponent(`السلام علیکم استاد محترم! میں نے دار التعلیم اکیڈمی میں داخلہ کی درخواست جمع کروائی ہے۔\nطالب علم: ${payload.student_name}\nسرپرست: ${payload.parent_name}\nکورس: ${payload.requested_course}\nآئی ڈی: ${data.student_id}`);
+                document.getElementById('waDirectLink').href = `https://wa.me/${teacherWa}?text=${msg}`;
+                {% endif %}
+
+                window.scrollTo({ top: 100, behavior: 'smooth' });
+            } else {
+                throw new Error(data.detail || data.message || "درخواست جمع نہیں ہو سکی۔");
             }
-
-            // Save details to sessionStorage
-            sessionStorage.setItem('student_session_id', data.session_id);
-            sessionStorage.setItem('student_name', data.student_name);
-            sessionStorage.setItem('livekit_token', data.livekit_token);
-            sessionStorage.setItem('livekit_url', data.livekit_url);
-            sessionStorage.setItem('class_name', data.class_name);
-            sessionStorage.setItem('permanent_id', data.permanent_id);
-
-            showAlert('Admission approved! Entering live classroom...', 'success');
-            setTimeout(() => {
-                window.location.href = '/classroom/student';
-            }, 600);
         } catch (err) {
-            showAlert(err.message, 'error');
-            joinBtn.disabled = false;
-            joinBtn.innerHTML = '<span>Enter Classroom</span> <i class="fa-solid fa-arrow-right-to-bracket"></i>';
+            errorMessage.innerText = err.message;
+            errorAlert.classList.remove('hidden');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
         }
     });
-
-    function showAlert(msg, type) {
-        alertBox.className = type === 'error'
-            ? 'mb-6 p-4 rounded-xl text-sm font-medium bg-red-500/20 text-red-200 border border-red-500/30'
-            : 'mb-6 p-4 rounded-xl text-sm font-medium bg-emerald-500/20 text-emerald-200 border border-emerald-500/30';
-        alertBox.textContent = msg;
-        alertBox.classList.remove('hidden');
-    }
 </script>
 {% endblock %}

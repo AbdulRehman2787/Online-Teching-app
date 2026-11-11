@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}اسلامی کتب خانہ — دار التعلیم والقرآن اکیڈمی{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <!-- Header -->
+    <div class="text-center max-w-3xl mx-auto space-y-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-100 text-teal-800 text-xs font-bold">
+            <i class="fa-solid fa-book-open text-teal-600"></i>
+            <span>ڈیجیٹل کتب خانہ — مفت علمی ذخیرہ</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">اسلامی کتب خانہ (Islamic Digital Library)</h1>
+        <p class="text-xs sm:text-sm text-slate-600 font-urdu leading-relaxed">
+            قرآنی علوم، مستند احادیث، سیرتِ طیبہ ﷺ، فقہی احکام اور مسنون دعاؤں پر مشتمل معیاری کتب کا مفت مطالعہ کریں۔
+        </p>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="relative w-full sm:w-80">
+            <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input type="text" id="bookSearchInput" onkeyup="filterBooks()" placeholder="کتاب کا نام یا مصنف تلاش کریں..."
+                class="w-full pr-10 pl-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-xs transition">
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 text-xs">
+            <button onclick="filterCategory('all')" class="cat-filter-btn px-3 py-1.5 rounded-lg bg-emerald-700 text-white font-bold transition">تمام کتب</button>
+            <button onclick="filterCategory('قرآنی علوم')" class="cat-filter-btn px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium transition">قرآنی علوم</button>
+            <button onclick="filterCategory('حدیث شریف')" class="cat-filter-btn px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium transition">حدیث شریف</button>
+            <button onclick="filterCategory('سنت و اذکار')" class="cat-filter-btn px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium transition">سنت و اذکار</button>
+            <button onclick="filterCategory('فقہ و اسلامی عقائد')" class="cat-filter-btn px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium transition">فقہ و عقائد</button>
+        </div>
+    </div>
+
+    <!-- Books Grid -->
+    <div id="booksGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for book in books %}
+        <div class="book-card bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition duration-300 flex flex-col group"
+             data-category="{{ book.category or 'عام' }}"
+             data-title="{{ book.title|lower }}"
+             data-author="{{ (book.author or '')|lower }}">
+            <!-- Cover -->
+            <div class="relative h-56 bg-slate-900 overflow-hidden">
+                <img src="{{ book.cover_image or 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80' }}" alt="{{ book.title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-95">
+                <span class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-emerald-900/90 text-amber-300 text-[10px] font-bold backdrop-blur">
+                    {{ book.category or 'اسلامی کتب' }}
+                </span>
+            </div>
+
+            <!-- Content -->
+            <div class="p-5 flex-1 flex flex-col">
+                <h3 class="text-base font-bold text-slate-900 leading-snug line-clamp-1 group-hover:text-emerald-700 transition">
+                    {{ book.title }}
+                </h3>
+                <p class="text-xs text-slate-500 font-semibold mt-1 mb-2">
+                    <i class="fa-solid fa-feather-pointed ml-1 text-amber-600"></i> {{ book.author or 'نامعلوم مصنف' }}
+                </p>
+                <p class="text-xs text-slate-600 font-urdu leading-relaxed line-clamp-2 flex-1 mb-4">
+                    {{ book.description or 'قرآن و سنت کی روشنی میں مرتب کردہ مستند تعلیمی کتاب۔' }}
+                </p>
+
+                <!-- Actions -->
+                <div class="pt-3 border-t border-slate-100 flex items-center gap-2">
+                    <a href="/{{ book.file_path }}" target="_blank" class="flex-1 py-2 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold transition text-center flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>مطالعہ کریں</span>
+                    </a>
+                    <a href="/{{ book.file_path }}" download="{{ book.filename }}" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs transition" title="ڈاؤنلوڈ کریں">
+                        <i class="fa-solid fa-download"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-4 text-center py-16 bg-white rounded-3xl border border-slate-200">
+            <i class="fa-solid fa-book-open text-4xl text-slate-300 mb-3"></i>
+            <p class="text-sm text-slate-500 font-bold">فی الحال کوئی کتاب شامل نہیں کی گئی ہے۔</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let activeCat = 'all';
+
+    function filterCategory(cat) {
+        activeCat = cat;
+        document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+            btn.className = 'cat-filter-btn px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium transition';
+        });
+        event.target.className = 'cat-filter-btn px-3 py-1.5 rounded-lg bg-emerald-700 text-white font-bold transition';
+        applyFilters();
+    }
+
+    function filterBooks() {
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const query = document.getElementById('bookSearchInput').value.trim().toLowerCase();
+        const cards = document.querySelectorAll('.book-card');
+
+        cards.forEach(card => {
+            const cat = card.getAttribute('data-category');
+            const title = card.getAttribute('data-title');
+            const author = card.getAttribute('data-author');
+
+            const matchesCat = (activeCat === 'all' || cat.includes(activeCat));
+            const matchesQuery = (!query || title.includes(query) || author.includes(query));
+
+            if (matchesCat && matchesQuery) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

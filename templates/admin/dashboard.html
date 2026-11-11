@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}ایڈمن کنٹرول پینل — دار التعلیم والقرآن اکیڈمی{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <!-- Admin Top Bar -->
+    <div class="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 border border-emerald-800/40">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold mb-3 border border-amber-500/30">
+                <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                <span>محفوظ ایڈمن پینل (Secure Admin Management)</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-white">
+                خوش آمدید، {{ teacher.full_name }}!
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 font-urdu mt-1">
+                اکیڈمی کے طلبہ، داخلہ جات، کورسز، کتب خانہ اور لائیو کلاس روم کا مرکزی کنٹرول روم
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <a href="/classroom/teacher" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs shadow-lg shadow-emerald-900/40 transition flex items-center gap-2">
+                <i class="fa-solid fa-chalkboard-user text-amber-300"></i>
+                <span>ٹیچر اسٹوڈیو کھولیں</span>
+            </a>
+            <a href="/admin/logout" class="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-red-900/50 text-slate-300 hover:text-red-300 text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>لاگ آؤٹ</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Statistics (Requirement 6) -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        <!-- 1. Total Students -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold text-slate-400 uppercase block mb-1">کل طلبہ (Total Students)</span>
+                <strong class="text-2xl sm:text-3xl font-black text-slate-900 font-mono">{{ stats.total_students }}</strong>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-users"></i>
+            </div>
+        </div>
+
+        <!-- 2. Pending Requests (with badge) -->
+        <a href="/admin/students?filter=pending" class="bg-white rounded-2xl p-5 border border-amber-300 shadow-sm hover:shadow-md transition flex items-center justify-between group">
+            <div>
+                <span class="text-xs font-bold text-amber-600 uppercase block mb-1">نئی درخواستیں (Pending)</span>
+                <div class="flex items-center gap-2">
+                    <strong class="text-2xl sm:text-3xl font-black text-amber-700 font-mono">{{ stats.pending_students }}</strong>
+                    {% if stats.pending_students > 0 %}
+                    <span class="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold live-indicator-pulse">منظوری درکار</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                <i class="fa-solid fa-user-clock"></i>
+            </div>
+        </a>
+
+        <!-- 3. Approved / Active Students -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold text-slate-400 uppercase block mb-1">فعال طلبہ (Active Students)</span>
+                <strong class="text-2xl sm:text-3xl font-black text-emerald-700 font-mono">{{ stats.active_students }}</strong>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-user-check"></i>
+            </div>
+        </div>
+
+        <!-- 4. Classroom Status -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold text-slate-400 uppercase block mb-1">کلاس روم اسٹیٹس (Classroom)</span>
+                {% if stats.is_live %}
+                <strong class="text-sm font-black text-emerald-600 flex items-center gap-1.5 mt-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 live-indicator-pulse"></span>
+                    <span>لائیو جاری ہے ({{ stats.student_count }} طلبہ)</span>
+                </strong>
+                {% else %}
+                <strong class="text-sm font-black text-slate-400 flex items-center gap-1.5 mt-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                    <span>آف لائن (Offline)</span>
+                </strong>
+                {% endif %}
+            </div>
+            <div class="w-12 h-12 rounded-2xl {% if stats.is_live %}bg-emerald-50 text-emerald-600{% else %}bg-slate-50 text-slate-400{% endif %} flex items-center justify-center text-xl">
+                <i class="fa-solid fa-chalkboard"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Modules Grid -->
+    <div>
+        <h2 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-emerald-700"></i>
+            <span>انتظامی ماڈیولز (Admin Modules)</span>
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- 1. Students Management -->
+            <a href="/admin/students" class="bg-white rounded-2xl p-5 border border-slate-200 hover:border-emerald-500 shadow-sm hover:shadow-lg transition flex flex-col justify-between group">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-emerald-700">طلبہ مینیجمنٹ (Students)</h3>
+                    <p class="text-[11px] text-slate-500 mt-1 font-urdu">منظوری، ریجیکٹ، بلاک اور پاسورڈ ری سیٹ</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-700">
+                    <span>کھولیں</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </div>
+            </a>
+
+            <!-- 2. Course Management -->
+            <a href="/admin/courses" class="bg-white rounded-2xl p-5 border border-slate-200 hover:border-emerald-500 shadow-sm hover:shadow-lg transition flex flex-col justify-between group">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-book-bookmark"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-emerald-700">کورسز مینیجمنٹ (Courses)</h3>
+                    <p class="text-[11px] text-slate-500 mt-1 font-urdu">نیا کورس، اسباق، پی ڈی ایف و ویڈیوز</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-700">
+                    <span>کھولیں ({{ stats.total_courses }})</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </div>
+            </a>
+
+            <!-- 3. Library Management -->
+            <a href="/admin/library" class="bg-white rounded-2xl p-5 border border-slate-200 hover:border-emerald-500 shadow-sm hover:shadow-lg transition flex flex-col justify-between group">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-emerald-700">کتب خانہ (Library)</h3>
+                    <p class="text-[11px] text-slate-500 mt-1 font-urdu">پی ڈی ایف اپلوڈ، تدوین و حذف</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-teal-700">
+                    <span>کھولیں ({{ stats.total_books }})</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </div>
+            </a>
+
+            <!-- 4. Classroom Management -->
+            <a href="/admin/classroom" class="bg-white rounded-2xl p-5 border border-slate-200 hover:border-emerald-500 shadow-sm hover:shadow-lg transition flex flex-col justify-between group">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-700 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-emerald-700">کلاس روم کنٹرول (Classroom)</h3>
+                    <p class="text-[11px] text-slate-500 mt-1 font-urdu">اسٹارٹ کلاس، پاسورڈ تبدیلی و شیئر</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-rose-700">
+                    <span>کھولیں</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </div>
+            </a>
+
+            <!-- 5. Contact Settings -->
+            <a href="/admin/settings/contact" class="bg-white rounded-2xl p-5 border border-slate-200 hover:border-emerald-500 shadow-sm hover:shadow-lg transition flex flex-col justify-between group">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition">
+                        <i class="fa-brands fa-whatsapp text-2xl"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-emerald-700">رابطہ سیٹنگز (Contact Settings)</h3>
+                    <p class="text-[11px] text-slate-500 mt-1 font-urdu">واٹس ایپ، فون و استاد کا نام تبدیل کریں</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-700">
+                    <span>کھولیں</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Admission Requests Table (Requirement 3) -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-user-clock text-amber-500"></i>
+                <span>حالیہ موصول شدہ داخلہ درخواستیں (Recent Applications)</span>
+            </h2>
+            <a href="/admin/students" class="text-xs font-bold text-emerald-700 hover:underline">
+                تمام طلبہ دیکھیں ←
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                        <th class="py-3 px-4">آئی ڈی</th>
+                        <th class="py-3 px-4">طالب علم</th>
+                        <th class="py-3 px-4">سرپرست</th>
+                        <th class="py-3 px-4">واٹس ایپ</th>
+                        <th class="py-3 px-4">کورس</th>
+                        <th class="py-3 px-4">اسٹیٹس</th>
+                        <th class="py-3 px-4">تاریخ</th>
+                        <th class="py-3 px-4 text-center">ایکشن</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for s in recent_students %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-emerald-800">{{ s.student_id }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">{{ s.full_name }}</td>
+                        <td class="py-3 px-4 text-slate-600">{{ s.parent_name }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-700 ltr-text text-right">{{ s.whatsapp_number }}</td>
+                        <td class="py-3 px-4 text-slate-600">{{ s.requested_course }}</td>
+                        <td class="py-3 px-4">
+                            {% if s.status == 'approved' %}
+                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">منظور شدہ</span>
+                            {% elif s.status == 'pending' %}
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">زیرِ غور</span>
+                            {% elif s.status == 'rejected' %}
+                            <span class="px-2.5 py-0.5 rounded-full bg-red-100 text-red-800 text-[10px] font-bold">مسترد</span>
+                            {% else %}
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 text-[10px] font-bold">{{ s.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-slate-400">{{ s.created_at.strftime('%Y-%m-%d') if s.created_at else '' }}</td>
+                        <td class="py-3 px-4 text-center">
+                            <a href="/admin/students" class="px-3 py-1 rounded-lg bg-emerald-700 text-white font-bold text-[11px] hover:bg-emerald-600 transition inline-block">
+                                مینیج کریں
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-6 text-slate-400">کوئی درخواست موجود نہیں ہے۔</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

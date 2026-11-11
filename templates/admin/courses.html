@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}کورسز مینیجمنٹ — ایڈمن پینل{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full mb-2">
+                <i class="fa-solid fa-book-bookmark"></i>
+                <span>ایڈمن پینل • کورس و نصاب مینیجمنٹ</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900">کورسز و اسباق مینیجمنٹ (Course Management)</h1>
+            <p class="text-xs text-slate-500 font-urdu mt-1">نئے کورسز، اسباق، پی ڈی ایف مواد اور ویڈیو لیکچرز کا انتظام کریں</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button onclick="openAddCourseModal()" class="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs shadow-md transition flex items-center gap-2">
+                <i class="fa-solid fa-plus text-amber-300"></i>
+                <span>نیا کورس شامل کریں (Add Course)</span>
+            </button>
+            <a href="/admin/dashboard" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+                <i class="fa-solid fa-arrow-right"></i>
+                <span>ڈیش بورڈ</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="courseToast" class="hidden p-4 rounded-2xl text-xs font-bold transition shadow-lg flex items-center justify-between">
+        <span id="courseToastMsg"></span>
+        <button onclick="document.getElementById('courseToast').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Courses List (Requirement 8) -->
+    <div class="space-y-6">
+        {% for course in courses %}
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <!-- Course Header Card -->
+            <div class="p-6 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-900 overflow-hidden flex-shrink-0">
+                        <img src="{{ course.thumbnail_url or '/static/images/green_dome.svg' }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold">{{ course.category }}</span>
+                            <span class="text-xs text-slate-500"><i class="fa-solid fa-clock ml-1"></i> {{ course.duration }}</span>
+                            {% if course.is_published %}
+                            <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold">شائع شدہ (Published)</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 rounded-md bg-slate-400 text-white text-[10px] font-bold">غیر شائع (Draft)</span>
+                            {% endif %}
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-900 mt-1">{{ course.title_urdu or course.title }}</h2>
+                        <p class="text-xs text-slate-500 font-semibold">{{ course.title }}</p>
+                    </div>
+                </div>
+
+                <!-- Course Action Buttons -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="openAddLessonModal({{ course.id }}, '{{ course.title_urdu or course.title }}')" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>نیا سبق شامل کریں</span>
+                    </button>
+                    <button onclick="togglePublishCourse({{ course.id }})" class="p-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs transition" title="پبلش / ان پبلش">
+                        <i class="fa-solid fa-eye{% if not course.is_published %}-slash{% endif %}"></i>
+                    </button>
+                    <button onclick="openEditCourseModal({{ course.id }}, '{{ course.title }}', '{{ course.title_urdu or '' }}', '{{ course.category or '' }}', '{{ course.duration or '' }}', '{{ course.thumbnail_url or '' }}', `{{ course.description or '' }}`)" class="p-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs transition" title="تبدیل کریں">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button onclick="deleteCourse({{ course.id }})" class="p-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs transition" title="حذف کریں">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Course Lessons Table -->
+            <div class="p-6">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">اس کورس کے اسباق (Lessons List):</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                                <th class="py-2.5 px-3">سبق #</th>
+                                <th class="py-2.5 px-3">عنوانِ سبق</th>
+                                <th class="py-2.5 px-3">تفصیل</th>
+                                <th class="py-2.5 px-3">پی ڈی ایف نوٹس</th>
+                                <th class="py-2.5 px-3">ویڈیو / آڈیو</th>
+                                <th class="py-2.5 px-3 text-center">ایکشن</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for lesson in course.lessons %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="py-3 px-3 font-mono font-bold text-emerald-800">{{ lesson.lesson_number }}</td>
+                                <td class="py-3 px-3 font-bold text-slate-900">{{ lesson.title }}</td>
+                                <td class="py-3 px-3 text-slate-600 font-urdu max-w-xs truncate">{{ lesson.description or '---' }}</td>
+                                <td class="py-3 px-3">
+                                    {% if lesson.pdf_file %}
+                                    <a href="{{ lesson.pdf_file }}" target="_blank" class="text-red-600 font-bold hover:underline flex items-center gap-1">
+                                        <i class="fa-solid fa-file-pdf"></i>
+                                        <span>فائل منسلک ہے</span>
+                                    </a>
+                                    {% else %}
+                                    <span class="text-slate-400">---</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-3">
+                                    {% if lesson.video_url %}
+                                    <span class="text-indigo-600 font-semibold"><i class="fa-solid fa-video ml-1"></i> ویڈیو</span>
+                                    {% elif lesson.audio_url %}
+                                    <span class="text-amber-600 font-semibold"><i class="fa-solid fa-headphones ml-1"></i> آڈیو</span>
+                                    {% else %}
+                                    <span class="text-slate-400">---</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-3 text-center">
+                                    <button onclick="deleteLesson({{ lesson.id }})" class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs transition" title="سبق حذف کریں">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-6 text-slate-400">کوئی سبق شامل نہیں ہے۔ اوپر دیئے گئے بٹن سے نیا سبق شامل کریں۔</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODALS: ADD COURSE, EDIT COURSE, ADD LESSON              -->
+<!-- ======================================================== -->
+
+<!-- 1. ADD COURSE MODAL -->
+<div id="addCourseModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-4 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900">نیا کورس شامل کریں (Add New Course)</h3>
+            <button onclick="closeAddCourseModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <form id="addCourseForm" class="space-y-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">کورس کا اردو عنوان *</label>
+                <input type="text" id="courseTitleUrdu" required placeholder="مثلاً: تجوید القرآن کورس" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">انگلش نام (Title) *</label>
+                <input type="text" id="courseTitle" required placeholder="Tajweed-ul-Quran" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">کیٹیگری</label>
+                    <input type="text" id="courseCategory" value="قرآنی علوم" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">دورانیہ (Duration)</label>
+                    <input type="text" id="courseDuration" value="3 Months" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+                </div>
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">تصویر URL (Thumbnail)</label>
+                <input type="url" id="courseThumbnail" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">کورس کی تفصیل (Description)</label>
+                <textarea id="courseDescription" rows="3" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-urdu"></textarea>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeAddCourseModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold">منسوخ</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-700 text-white font-bold hover:bg-emerald-600">کورس بنائیں</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 2. ADD LESSON MODAL -->
+<div id="addLessonModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-4 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">نیا سبق شامل کریں (Add Lesson)</h3>
+                <p id="lessonCourseTitleDisplay" class="text-xs text-emerald-700 font-bold"></p>
+            </div>
+            <button onclick="closeAddLessonModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <form id="addLessonForm" class="space-y-3 text-xs" enctype="multipart/form-data">
+            <input type="hidden" id="lessonCourseId">
+            <div class="grid grid-cols-4 gap-3">
+                <div class="col-span-1">
+                    <label class="block font-bold text-slate-700 mb-1">سبق #</label>
+                    <input type="number" id="lessonNumber" value="1" min="1" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+                </div>
+                <div class="col-span-3">
+                    <label class="block font-bold text-slate-700 mb-1">سبق کا عنوان *</label>
+                    <input type="text" id="lessonTitle" required placeholder="مثلاً: تختی نمبر 1: مخارج کی ادائیگی" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">پی ڈی ایف نوٹس (PDF File Upload)</label>
+                <input type="file" id="lessonPdfFile" accept=".pdf" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-emerald-700 file:text-white file:text-xs">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">ویڈیو لیکچر لنک (Embed Video URL)</label>
+                <input type="url" id="lessonVideoUrl" placeholder="https://www.youtube.com/embed/..." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">سبق کی مختصر تفصیل (Description)</label>
+                <textarea id="lessonDesc" rows="2" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-urdu"></textarea>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeAddLessonModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold">منسوخ</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-500">سبق اپلوڈ کریں</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showToast(msg, isSuccess = true) {
+        const toast = document.getElementById('courseToast');
+        const text = document.getElementById('courseToastMsg');
+        text.innerText = msg;
+        toast.className = `p-4 rounded-2xl text-xs font-bold transition shadow-lg flex items-center justify-between ${isSuccess ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-red-100 text-red-900 border border-red-300'}`;
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 5000);
+    }
+
+    // Modal controls
+    function openAddCourseModal() { document.getElementById('addCourseModal').classList.remove('hidden'); }
+    function closeAddCourseModal() { document.getElementById('addCourseModal').classList.add('hidden'); }
+    function openAddLessonModal(id, title) {
+        document.getElementById('lessonCourseId').value = id;
+        document.getElementById('lessonCourseTitleDisplay').innerText = title;
+        document.getElementById('addLessonModal').classList.remove('hidden');
+    }
+    function closeAddLessonModal() { document.getElementById('addLessonModal').classList.add('hidden'); }
+
+    // Add Course
+    document.getElementById('addCourseForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('title', document.getElementById('courseTitle').value);
+        formData.append('title_urdu', document.getElementById('courseTitleUrdu').value);
+        formData.append('category', document.getElementById('courseCategory').value);
+        formData.append('duration', document.getElementById('courseDuration').value);
+        formData.append('thumbnail_url', document.getElementById('courseThumbnail').value);
+        formData.append('description', document.getElementById('courseDescription').value);
+
+        try {
+            const resp = await fetch('/api/admin/courses/create', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                closeAddCourseModal();
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    });
+
+    // Add Lesson
+    document.getElementById('addLessonForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const courseId = document.getElementById('lessonCourseId').value;
+        const formData = new FormData();
+        formData.append('title', document.getElementById('lessonTitle').value);
+        formData.append('lesson_number', document.getElementById('lessonNumber').value);
+        formData.append('description', document.getElementById('lessonDesc').value);
+        formData.append('video_url', document.getElementById('lessonVideoUrl').value);
+        const pdfInput = document.getElementById('lessonPdfFile');
+        if (pdfInput.files[0]) {
+            formData.append('pdf_file', pdfInput.files[0]);
+        }
+
+        try {
+            const resp = await fetch(`/api/admin/courses/${courseId}/lessons/create`, { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                closeAddLessonModal();
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    });
+
+    // Toggle publish
+    async function togglePublishCourse(courseId) {
+        try {
+            const resp = await fetch(`/api/admin/courses/${courseId}/toggle-publish`, { method: 'POST' });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    }
+
+    // Delete course
+    async function deleteCourse(courseId) {
+        if (!confirm("خبردار! کیا آپ واقعی یہ کورس اور اس کے تمام اسباق حذف کرنا چاہتے ہیں؟")) return;
+        try {
+            const resp = await fetch(`/api/admin/courses/${courseId}/delete`, { method: 'POST' });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    }
+
+    // Delete lesson
+    async function deleteLesson(lessonId) {
+        if (!confirm("کیا آپ واقعی یہ سبق حذف کرنا چاہتے ہیں؟")) return;
+        try {
+            const resp = await fetch(`/api/admin/lessons/${lessonId}/delete`, { method: 'POST' });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    }
+</script>
+{% endblock %}

@@ -1,51 +1,112 @@
 {% extends "base.html" %}
 
-{% block title %}Teacher Login | {{ app_name }}{% endblock %}
+{% block title %}لاگ ان — دار التعلیم والقرآن اکیڈمی{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950">
-    <div class="max-w-md w-full glass-dark text-white rounded-2xl p-8 shadow-2xl border border-indigo-500/30">
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/40 mb-4 shadow-lg">
-                <i class="fa-solid fa-lock text-3xl"></i>
+<div class="min-h-[85vh] py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center bg-gradient-to-b from-slate-100 via-emerald-50/30 to-slate-100">
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-slate-200/80 p-6 sm:p-8 relative overflow-hidden">
+        <!-- Top Emerald Accent Bar -->
+        <div class="absolute top-0 inset-x-0 h-2.5 bg-gradient-to-r from-emerald-600 via-amber-400 to-emerald-800"></div>
+
+        <!-- Logo -->
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-800 text-white p-2 shadow-lg shadow-emerald-900/20 mb-3 flex items-center justify-center">
+                <img src="/static/images/app_logo.svg" alt="Logo" class="w-full h-full object-contain">
             </div>
-            <h1 class="text-2xl font-bold tracking-tight">Teacher Portal Login</h1>
-            <p class="text-sm text-slate-400 mt-2">Sign in to manage your classroom, students, and live teaching.</p>
+            <h1 class="text-2xl font-black text-slate-900">پورٹل لاگ ان</h1>
+            <p class="text-xs text-slate-500 font-semibold mt-1">دار التعلیم والقرآن تعلیمی پورٹل</p>
         </div>
 
-        <div id="alertBox" class="hidden mb-6 p-4 rounded-xl text-sm font-medium"></div>
+        <!-- Role Tabs (Student vs Admin) -->
+        <div class="flex rounded-2xl bg-slate-100 p-1 mb-6 border border-slate-200">
+            <button id="studentTabBtn" onclick="switchLoginTab('student')" class="flex-1 py-2.5 rounded-xl font-bold text-xs transition duration-200 bg-white text-emerald-800 shadow-sm flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-user-graduate"></i>
+                <span>طالب علم لاگ ان</span>
+            </button>
+            <button id="adminTabBtn" onclick="switchLoginTab('admin')" class="flex-1 py-2.5 rounded-xl font-bold text-xs transition duration-200 text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>ایڈمن / استاد لاگ ان</span>
+            </button>
+        </div>
 
-        <form id="loginForm" class="space-y-4">
+        <!-- Error Alert -->
+        <div id="loginAlert" class="hidden mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
+            <i class="fa-solid fa-circle-exclamation text-base flex-shrink-0"></i>
+            <span id="loginAlertMsg"></span>
+        </div>
+
+        <!-- 1. STUDENT LOGIN FORM (REQ 4) -->
+        <form id="studentLoginForm" class="space-y-4">
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Username or Email</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    اسٹوڈنٹ آئی ڈی یا واٹس ایپ نمبر (Student ID / WhatsApp)
+                </label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-regular fa-user"></i></span>
-                    <input type="text" id="usernameOrEmail" required placeholder="Enter username or email"
-                        class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
+                        <i class="fa-solid fa-id-card"></i>
+                    </span>
+                    <input type="text" id="studentIdentifier" required placeholder="مثلاً: STU-1001 یا 03001234567" dir="ltr"
+                        class="w-full pr-10 pl-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white text-sm text-right font-mono transition">
                 </div>
+                <p class="text-[11px] text-slate-400 mt-1">ایڈمن سے حاصل کردہ اسٹوڈنٹ آئی ڈی یا رجسٹرڈ واٹس ایپ درج کریں۔</p>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Password</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    پاسورڈ (Password)
+                </label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-solid fa-key"></i></span>
-                    <input type="password" id="password" required placeholder="••••••••"
-                        class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
+                        <i class="fa-solid fa-lock"></i>
+                    </span>
+                    <input type="password" id="studentPassword" required placeholder="پاسورڈ درج کریں"
+                        class="w-full pr-10 pl-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white text-sm transition">
                 </div>
             </div>
 
-            <button type="submit" id="submitBtn"
-                class="w-full mt-6 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-white shadow-lg shadow-indigo-600/30 transition duration-200 flex items-center justify-center gap-2">
-                <span>Sign In to Dashboard</span>
-                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            <button type="submit" id="studentSubmitBtn" class="w-full mt-4 py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-800/25 transition duration-200 flex items-center justify-center gap-2">
+                <span>ڈیش بورڈ میں داخل ہوں</span>
+                <i class="fa-solid fa-arrow-left"></i>
             </button>
         </form>
 
-        <div class="mt-8 pt-6 border-t border-slate-800 text-center">
-            <a href="/join" class="text-xs text-indigo-400 hover:text-indigo-300 transition flex items-center justify-center gap-1.5">
-                <i class="fa-solid fa-graduation-cap"></i>
-                <span>Are you a student? Click here to join class</span>
-            </a>
+        <!-- 2. ADMIN LOGIN FORM (REQ 6) -->
+        <form id="adminLoginForm" class="space-y-4 hidden">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    یوزر نیم یا ای میل (Username or Email)
+                </label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </span>
+                    <input type="text" id="adminUsername" required placeholder="admin / abdulrehman" dir="ltr"
+                        class="w-full pr-10 pl-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white text-sm text-right font-mono transition">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                    ایڈمن پاسورڈ (Admin Password)
+                </label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
+                        <i class="fa-solid fa-key"></i>
+                    </span>
+                    <input type="password" id="adminPassword" required placeholder="ایڈمن پاسورڈ درج کریں"
+                        class="w-full pr-10 pl-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white text-sm transition">
+                </div>
+            </div>
+
+            <button type="submit" id="adminSubmitBtn" class="w-full mt-4 py-3.5 px-4 rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-amber-300 font-bold text-sm shadow-lg transition duration-200 flex items-center justify-center gap-2 border border-slate-700">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>ایڈمن پینل لاگ ان</span>
+            </button>
+        </form>
+
+        <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>نیا داخلہ لینا چاہتے ہیں؟</span>
+            <a href="/join" class="text-emerald-700 font-bold hover:underline">داخلہ فارم پر کریں</a>
         </div>
     </div>
 </div>
@@ -53,50 +114,98 @@
 
 {% block scripts %}
 <script>
-    const form = document.getElementById('loginForm');
-    const alertBox = document.getElementById('alertBox');
-    const submitBtn = document.getElementById('submitBtn');
+    const studentTabBtn = document.getElementById('studentTabBtn');
+    const adminTabBtn = document.getElementById('adminTabBtn');
+    const studentLoginForm = document.getElementById('studentLoginForm');
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    const alertBox = document.getElementById('loginAlert');
+    const alertMsg = document.getElementById('loginAlertMsg');
 
-    form.addEventListener('submit', async (e) => {
+    function switchLoginTab(role) {
+        alertBox.classList.add('hidden');
+        if (role === 'admin') {
+            studentTabBtn.className = 'flex-1 py-2.5 rounded-xl font-bold text-xs transition duration-200 text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5';
+            adminTabBtn.className = 'flex-1 py-2.5 rounded-xl font-bold text-xs transition duration-200 bg-white text-slate-900 shadow-sm flex items-center justify-center gap-1.5';
+            studentLoginForm.classList.add('hidden');
+            adminLoginForm.classList.remove('hidden');
+        } else {
+            studentTabBtn.className = 'flex-1 py-2.5 rounded-xl font-bold text-xs transition duration-200 bg-white text-emerald-800 shadow-sm flex items-center justify-center gap-1.5';
+            adminTabBtn.className = 'flex-1 py-2.5 rounded-xl font-bold text-xs transition duration-200 text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5';
+            studentLoginForm.classList.remove('hidden');
+            adminLoginForm.classList.add('hidden');
+        }
+    }
+
+    // Check query params if role=admin requested
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('role') === 'admin') {
+        switchLoginTab('admin');
+    }
+
+    // Student Login Submit
+    studentLoginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const usernameOrEmail = document.getElementById('usernameOrEmail').value.trim();
-        const password = document.getElementById('password').value;
-
+        alertBox.classList.add('hidden');
+        const submitBtn = document.getElementById('studentSubmitBtn');
+        const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Authenticating...';
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>لاگ ان ہو رہا ہے...</span>';
 
         try {
-            const res = await fetch('/api/auth/login', {
+            const resp = await fetch('/api/students/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    username_or_email: usernameOrEmail,
-                    password: password
+                    login_identifier: document.getElementById('studentIdentifier').value.trim(),
+                    password: document.getElementById('studentPassword').value
                 })
             });
-
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.detail || 'Login failed');
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                window.location.href = '/student/dashboard';
+            } else {
+                throw new Error(data.detail || data.message || "لاگ ان نہیں ہو سکا۔");
             }
-
-            showAlert('Login successful! Redirecting...', 'success');
-            setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 600);
         } catch (err) {
-            showAlert(err.message, 'error');
+            alertMsg.innerText = err.message;
+            alertBox.classList.remove('hidden');
+        } finally {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span>Sign In to Dashboard</span> <i class="fa-solid fa-arrow-right-to-bracket"></i>';
+            submitBtn.innerHTML = originalText;
         }
     });
 
-    function showAlert(msg, type) {
-        alertBox.className = type === 'error'
-            ? 'mb-6 p-4 rounded-xl text-sm font-medium bg-red-500/20 text-red-200 border border-red-500/30'
-            : 'mb-6 p-4 rounded-xl text-sm font-medium bg-emerald-500/20 text-emerald-200 border border-emerald-500/30';
-        alertBox.textContent = msg;
-        alertBox.classList.remove('hidden');
-    }
+    // Admin Login Submit
+    adminLoginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertBox.classList.add('hidden');
+        const submitBtn = document.getElementById('adminSubmitBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>لاگ ان ہو رہا ہے...</span>';
+
+        try {
+            const resp = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username_or_email: document.getElementById('adminUsername').value.trim(),
+                    password: document.getElementById('adminPassword').value
+                })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+                window.location.href = '/admin/dashboard';
+            } else {
+                throw new Error(data.detail || "ایڈمن یوزر نیم یا پاسورڈ غلط ہے۔");
+            }
+        } catch (err) {
+            alertMsg.innerText = err.message;
+            alertBox.classList.remove('hidden');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    });
 </script>
 {% endblock %}

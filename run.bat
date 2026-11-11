@@ -1,10 +1,10 @@
 @echo off
-title Online Teaching & Learning Platform
-color 0b
+title دار التعلیم والقرآن — Islamic Education App
+color 0a
 
 echo ========================================================
-echo   ONLINE TEACHING & LEARNING APPLICATION
-echo   (Single Teacher, Permanent Classroom, LiveKit & PDF Sync)
+echo   دار التعلیم والقرآن — ISLAMIC EDUCATION ACADEMY
+echo   Complete Islamic Education App & Admin Management System
 echo ========================================================
 echo.
 
@@ -12,13 +12,13 @@ cd /d "%~dp0"
 
 set "PY_CMD="
 
-if exist "%~dp0.venv\Scripts\python.exe" (
-    set "PY_CMD=%~dp0.venv\Scripts\python.exe"
+if exist "%~dp0venv\Scripts\python.exe" (
+    set "PY_CMD=%~dp0venv\Scripts\python.exe"
     goto :PYTHON_FOUND
 )
 
-if exist "%~dp0venv\Scripts\python.exe" (
-    set "PY_CMD=%~dp0venv\Scripts\python.exe"
+if exist "%~dp0.venv\Scripts\python.exe" (
+    set "PY_CMD=%~dp0.venv\Scripts\python.exe"
     goto :PYTHON_FOUND
 )
 
@@ -62,7 +62,7 @@ if %errorlevel% neq 0 (
     echo Dependencies are already satisfied!
 )
 
-echo [3/3] Starting FastAPI Server with Uvicorn on http://localhost:8000 ...
+echo [3/3] Starting Islamic Education App on http://localhost:8000 ...
 start "" http://localhost:8000
 "%PY_CMD%" -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 

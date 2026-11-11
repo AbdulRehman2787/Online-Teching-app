@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+
+{% block title %}طلبہ مینیجمنٹ — ایڈمن پینل{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full mb-2">
+                <i class="fa-solid fa-users"></i>
+                <span>ایڈمن پینل • داخلہ و طلبہ مینیجمنٹ</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900">طلبہ مینیجمنٹ سسٹم (Student Management)</h1>
+            <p class="text-xs text-slate-500 font-urdu mt-1">طلبہ کی درخواستوں کی منظوری، پاسورڈ تبدیلی اور تعلیمی اسٹیٹس کنٹرول</p>
+        </div>
+
+        <a href="/admin/dashboard" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 self-start">
+            <i class="fa-solid fa-arrow-right"></i>
+            <span>ایڈمن ڈیش بورڈ پر واپس</span>
+        </a>
+    </div>
+
+    <!-- Controls Bar: Search & Status Filters (Requirement 7) -->
+    <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <!-- Search Input -->
+        <div class="relative w-full md:w-80">
+            <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input type="text" id="studentSearchInput" onkeyup="filterStudents()" placeholder="نام یا واٹس ایپ نمبر سے تلاش کریں..."
+                class="w-full pr-10 pl-4 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-xs transition">
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 text-xs">
+            <button onclick="setTabFilter('all')" class="stu-filter-tab px-3.5 py-2 rounded-xl bg-slate-900 text-white font-bold transition">
+                تمام ({{ students|length }})
+            </button>
+            <button onclick="setTabFilter('pending')" class="stu-filter-tab px-3.5 py-2 rounded-xl bg-amber-100 text-amber-800 hover:bg-amber-200 font-bold transition flex items-center gap-1.5">
+                <i class="fa-solid fa-clock"></i>
+                <span>زیرِ غور</span>
+                <span class="px-1.5 py-0.2 rounded-full bg-amber-600 text-white text-[10px]">{{ pending_count }}</span>
+            </button>
+            <button onclick="setTabFilter('approved')" class="stu-filter-tab px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium transition">
+                منظور شدہ (Approved)
+            </button>
+            <button onclick="setTabFilter('rejected')" class="stu-filter-tab px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium transition">
+                مسترد (Rejected)
+            </button>
+            <button onclick="setTabFilter('blocked')" class="stu-filter-tab px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium transition">
+                بلاک شدہ (Blocked)
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast / Notification Alert -->
+    <div id="actionToast" class="hidden p-4 rounded-2xl text-xs font-bold transition shadow-lg flex items-center justify-between">
+        <span id="actionToastMsg"></span>
+        <button onclick="document.getElementById('actionToast').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Students Table (Requirement 3 & 7) -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                        <th class="py-3.5 px-4">آئی ڈی</th>
+                        <th class="py-3.5 px-4">طالب علم کا نام</th>
+                        <th class="py-3.5 px-4">والد / سرپرست</th>
+                        <th class="py-3.5 px-4">واٹس ایپ نمبر</th>
+                        <th class="py-3.5 px-4">ملک و عمر</th>
+                        <th class="py-3.5 px-4">منتخب کورس</th>
+                        <th class="py-3.5 px-4">اسٹیٹس</th>
+                        <th class="py-3.5 px-4">پاسورڈ</th>
+                        <th class="py-3.5 px-4 text-center">انتظامی ایکشنز (Actions)</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTableBody" class="divide-y divide-slate-100">
+                    {% for s in students %}
+                    <tr class="student-row hover:bg-slate-50/90 transition"
+                        data-status="{{ s.status }}"
+                        data-name="{{ s.full_name|lower }}"
+                        data-parent="{{ s.parent_name|lower }}"
+                        data-whatsapp="{{ s.whatsapp_number }}"
+                        data-id="{{ s.student_id|lower }}">
+                        
+                        <!-- Student ID -->
+                        <td class="py-3.5 px-4 font-mono font-bold text-emerald-800">
+                            {{ s.student_id }}
+                        </td>
+
+                        <!-- Name & Email -->
+                        <td class="py-3.5 px-4">
+                            <strong class="text-sm font-bold text-slate-900 block">{{ s.full_name }}</strong>
+                            {% if s.email %}
+                            <span class="text-[10px] text-slate-400 font-mono">{{ s.email }}</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Parent Name -->
+                        <td class="py-3.5 px-4 text-slate-700">
+                            {{ s.parent_name }}
+                        </td>
+
+                        <!-- WhatsApp -->
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center gap-1.5 font-mono text-emerald-700 font-bold ltr-text">
+                                <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i>
+                                <span>{{ s.whatsapp_number }}</span>
+                            </div>
+                        </td>
+
+                        <!-- Country & Age -->
+                        <td class="py-3.5 px-4 text-slate-600">
+                            {{ s.country }} • {{ s.age or '-' }} سال
+                        </td>
+
+                        <!-- Course -->
+                        <td class="py-3.5 px-4 text-slate-700 font-medium">
+                            {{ s.requested_course }}
+                        </td>
+
+                        <!-- Status Badge -->
+                        <td class="py-3.5 px-4">
+                            {% if s.status == 'approved' %}
+                            <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">منظور شدہ</span>
+                            {% elif s.status == 'pending' %}
+                            <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">زیرِ غور</span>
+                            {% elif s.status == 'rejected' %}
+                            <span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-[10px] font-bold">مسترد</span>
+                            {% elif s.status == 'blocked' %}
+                            <span class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-200 text-[10px] font-bold">بلاک</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Temp Password -->
+                        <td class="py-3.5 px-4">
+                            <span class="font-mono text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded-md">
+                                {{ s.temp_password or '******' }}
+                            </span>
+                        </td>
+
+                        <!-- Action Buttons (Approve, Reject, Edit, Block/Deactivate, Reset Password) -->
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center justify-center gap-1.5">
+                                {% if s.status == 'pending' %}
+                                <!-- APPROVE BUTTON -->
+                                <button onclick="approveStudent({{ s.id }}, '{{ s.full_name }}')" title="درخواست منظور کریں" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-sm transition">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>منظور</span>
+                                </button>
+                                <!-- REJECT BUTTON -->
+                                <button onclick="rejectStudent({{ s.id }})" title="مسترد کریں" class="px-2 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs transition">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                {% endif %}
+
+                                {% if s.status == 'approved' %}
+                                <!-- WHATSAPP SHARE CREDENTIALS SHORTCUT -->
+                                {% set clean_phone = s.whatsapp_number|replace(' ', '')|replace('+', '')|replace('-', '') %}
+                                <a href="https://wa.me/{{ clean_phone }}?text=السلام علیکم ورحمۃ اللہ!%0Aدار التعلیم اکیڈمی میں طالب علم {{ s.full_name }} کا داخلہ منظور ہو گیا ہے۔%0Aآئی ڈی: {{ s.student_id }}%0Aپاسورڈ: {{ s.temp_password }}%0Aلاگ ان کریں: {{ request.base_url }}login"
+                                   target="_blank" title="واٹس ایپ پر لاگ ان تفصیلات بھیجیں" class="p-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs transition">
+                                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                                </a>
+                                {% endif %}
+
+                                <!-- EDIT BUTTON -->
+                                <button onclick="openEditModal({{ s.id }}, '{{ s.full_name }}', '{{ s.parent_name }}', '{{ s.whatsapp_number }}', '{{ s.country }}', {{ s.age or 0 }}, '{{ s.email or '' }}', '{{ s.requested_course }}')" title="معلومات تبدیل کریں" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs transition">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+
+                                <!-- RESET PASSWORD BUTTON -->
+                                <button onclick="openResetPasswordModal({{ s.id }}, '{{ s.full_name }}')" title="پاسورڈ ری سیٹ کریں" class="p-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs transition">
+                                    <i class="fa-solid fa-key"></i>
+                                </button>
+
+                                <!-- BLOCK / ACTIVATE BUTTON -->
+                                <button onclick="toggleBlockStudent({{ s.id }})" title="{% if s.status == 'blocked' %}ایکٹیویٹ کریں{% else %}بلاک / ڈی ایکٹیویٹ کریں{% endif %}" class="p-1.5 rounded-lg {% if s.status == 'blocked' %}bg-emerald-100 text-emerald-800 hover:bg-emerald-200{% else %}bg-slate-100 text-slate-600 hover:bg-red-100 hover:text-red-700{% endif %} text-xs transition">
+                                    <i class="fa-solid fa-ban"></i>
+                                </button>
+
+                                <!-- DELETE BUTTON -->
+                                <button onclick="deleteStudent({{ s.id }})" title="حذف کریں" class="p-1.5 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-400 hover:text-red-600 text-xs transition">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-10 text-slate-400">کوئی ریکارڈ موجود نہیں ہے۔</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODALS: EDIT STUDENT, RESET PASSWORD, APPROVE NOTICE     -->
+<!-- ======================================================== -->
+
+<!-- 1. EDIT STUDENT MODAL -->
+<div id="editStudentModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-4 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900">طالب علم کی معلومات تبدیل کریں (Edit Student)</h3>
+            <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <form id="editStudentForm" class="space-y-3 text-xs">
+            <input type="hidden" id="editStudentId">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">طالب علم کا نام</label>
+                <input type="text" id="editFullName" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">سرپرست کا نام</label>
+                <input type="text" id="editParentName" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">واٹس ایپ نمبر</label>
+                <input type="text" id="editWhatsapp" required dir="ltr" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-right font-mono">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">ملک</label>
+                    <input type="text" id="editCountry" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">عمر</label>
+                    <input type="number" id="editAge" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+                </div>
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">کورس</label>
+                <select id="editCourse" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+                    <option value="نورانی قاعدہ مع تجوید">نورانی قاعدہ مع تجوید</option>
+                    <option value="ترجمۃ القرآن الکریم">ترجمۃ القرآن الکریم</option>
+                    <option value="تفسیر القرآن الکریم">تفسیر القرآن الکریم</option>
+                    <option value="مسنون دعائیں اور اذکار">مسنون دعائیں اور اذکار</option>
+                    <option value="چالیس احادیث نبوی">چالیس احادیث نبوی</option>
+                    <option value="نماز اور بنیادی طہارت کورس">نماز اور بنیادی طہارت کورس</option>
+                </select>
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">ای میل (اختیاری)</label>
+                <input type="email" id="editEmail" dir="ltr" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-right">
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold">منسوخ</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-700 text-white font-bold hover:bg-emerald-600">محفوظ کریں</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 2. RESET PASSWORD MODAL -->
+<div id="resetPasswordModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-sm font-bold text-slate-900">پاسورڈ ری سیٹ کریں (Reset Password)</h3>
+            <button onclick="closeResetModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <form id="resetPasswordForm" class="space-y-4 text-xs">
+            <input type="hidden" id="resetStudentId">
+            <p id="resetStudentNameDisplay" class="text-slate-600 font-bold"></p>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">نیا پاسورڈ درج کریں:</label>
+                <input type="text" id="newPasswordInput" required placeholder="مثلاً: Islam123" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-mono text-sm">
+            </div>
+            <div class="pt-2 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeResetModal()" class="px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold">منسوخ</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-amber-600 text-white font-bold hover:bg-amber-500">پاسورڈ تبدیل کریں</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let activeStatusTab = 'all';
+
+    function setTabFilter(tab) {
+        activeStatusTab = tab;
+        document.querySelectorAll('.stu-filter-tab').forEach(btn => {
+            btn.className = 'stu-filter-tab px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium transition';
+        });
+        event.target.closest('.stu-filter-tab').className = 'stu-filter-tab px-3.5 py-2 rounded-xl bg-slate-900 text-white font-bold transition';
+        filterStudents();
+    }
+
+    function filterStudents() {
+        const query = document.getElementById('studentSearchInput').value.trim().toLowerCase();
+        const rows = document.querySelectorAll('.student-row');
+
+        rows.forEach(row => {
+            const status = row.getAttribute('data-status');
+            const name = row.getAttribute('data-name');
+            const parent = row.getAttribute('data-parent');
+            const wa = row.getAttribute('data-whatsapp');
+            const id = row.getAttribute('data-id');
+
+            const matchesTab = (activeStatusTab === 'all' || status === activeStatusTab);
+            const matchesQuery = (!query || name.includes(query) || parent.includes(query) || wa.includes(query) || id.includes(query));
+
+            if (matchesTab && matchesQuery) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function showToast(msg, isSuccess = true) {
+        const toast = document.getElementById('actionToast');
+        const text = document.getElementById('actionToastMsg');
+        text.innerText = msg;
+        toast.className = `p-4 rounded-2xl text-xs font-bold transition shadow-lg flex items-center justify-between ${isSuccess ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-red-100 text-red-900 border border-red-300'}`;
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 5000);
+    }
+
+    // Approve Student
+    async function approveStudent(studentId, name) {
+        if (!confirm(`کیا آپ واقعی طالب علم "${name}" کا داخلہ منظور کرنا چاہتے ہیں؟`)) return;
+
+        try {
+            const resp = await fetch(`/api/admin/students/${studentId}/approve`, {
+                method: 'POST'
+            });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                showToast(data.message, true);
+                if (data.whatsapp_url) {
+                    if (confirm("داخلہ منظور ہو گیا! کیا آپ واٹس ایپ پر والد/طالب علم کو لاگ ان کی تفصیلات بھیجنا چاہتے ہیں؟")) {
+                        window.open(data.whatsapp_url, '_blank');
+                    }
+                }
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                throw new Error(data.detail || "منظور نہیں کیا جا سکا۔");
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    }
+
+    // Reject Student
+    async function rejectStudent(studentId) {
+        if (!confirm("کیا آپ واقعی اس درخواست کو مسترد کرنا چاہتے ہیں؟")) return;
+
+        try {
+            const resp = await fetch(`/api/admin/students/${studentId}/reject`, { method: 'POST' });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    }
+
+    // Toggle Block Student
+    async function toggleBlockStudent(studentId) {
+        try {
+            const resp = await fetch(`/api/admin/students/${studentId}/toggle-status`, { method: 'POST' });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    }
+
+    // Delete Student
+    async function deleteStudent(studentId) {
+        if (!confirm("خبردار! کیا آپ واقعی اس طالب علم کا تمام ریکارڈ مستقل طور پر حذف کرنا چاہتے ہیں؟")) return;
+
+        try {
+            const resp = await fetch(`/api/admin/students/${studentId}`, { method: 'DELETE' });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    }
+
+    // Edit Modal Logic
+    function openEditModal(id, name, parent, wa, country, age, email, course) {
+        document.getElementById('editStudentId').value = id;
+        document.getElementById('editFullName').value = name;
+        document.getElementById('editParentName').value = parent;
+        document.getElementById('editWhatsapp').value = wa;
+        document.getElementById('editCountry').value = country;
+        document.getElementById('editAge').value = age || '';
+        document.getElementById('editEmail').value = email || '';
+        document.getElementById('editCourse').value = course;
+        document.getElementById('editStudentModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editStudentModal').classList.add('hidden');
+    }
+
+    document.getElementById('editStudentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('editStudentId').value;
+        const formData = new FormData();
+        formData.append('full_name', document.getElementById('editFullName').value);
+        formData.append('parent_name', document.getElementById('editParentName').value);
+        formData.append('whatsapp_number', document.getElementById('editWhatsapp').value);
+        formData.append('country', document.getElementById('editCountry').value);
+        formData.append('age', document.getElementById('editAge').value || '');
+        formData.append('email', document.getElementById('editEmail').value || '');
+        formData.append('requested_course', document.getElementById('editCourse').value);
+
+        try {
+            const resp = await fetch(`/api/admin/students/${id}/edit`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                closeEditModal();
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    });
+
+    // Reset Password Modal Logic
+    function openResetPasswordModal(id, name) {
+        document.getElementById('resetStudentId').value = id;
+        document.getElementById('resetStudentNameDisplay').innerText = `طالب علم: ${name}`;
+        document.getElementById('newPasswordInput').value = 'Islam' + Math.floor(100 + Math.random() * 900);
+        document.getElementById('resetPasswordModal').classList.remove('hidden');
+    }
+
+    function closeResetModal() {
+        document.getElementById('resetPasswordModal').classList.add('hidden');
+    }
+
+    document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('resetStudentId').value;
+        const newPass = document.getElementById('newPasswordInput').value.trim();
+        const formData = new FormData();
+        formData.append('new_password', newPass);
+
+        try {
+            const resp = await fetch(`/api/admin/students/${id}/reset-password`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                closeResetModal();
+                showToast(`پاسورڈ کامیابی سے تبدیل ہو گیا: ${newPass}`, true);
+                setTimeout(() => window.location.reload(), 1500);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    });
+
+    // Check query params if filter=pending
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('filter') === 'pending') {
+        setTabFilter('pending');
+    }
+</script>
+{% endblock %}

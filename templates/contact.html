@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}رابطہ کریں — دار التعلیم والقرآن اکیڈمی{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+    <!-- Header -->
+    <div class="text-center max-w-3xl mx-auto space-y-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
+            <i class="fa-solid fa-headset text-emerald-600"></i>
+            <span>ہمہ وقت رہنمائی و مشاورت</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">رابطہ کریں (Contact Us)</h1>
+        <p class="text-xs sm:text-sm text-slate-600 font-urdu leading-relaxed">
+            دار التعلیم والقرآن اکیڈمی میں داخلہ، آن لائن کلاسز اور فیس سے متعلق کسی بھی سوال کے لیے براہِ راست رابطہ کریں۔
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- Contact Cards / Info (lg:col-span-5) -->
+        <div class="lg:col-span-5 space-y-4">
+            <!-- Teacher Card -->
+            <div class="bg-gradient-to-br from-emerald-800 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-700/50 space-y-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-2xl bg-white/10 text-amber-300 flex items-center justify-center text-3xl border border-white/20">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs text-amber-300 font-bold uppercase tracking-wider">نگران و استادِ محترم</span>
+                        <h3 class="text-xl font-bold text-white mt-0.5">{{ contact.teacher_name if contact else 'قاری عبد الرحمن صاحب' }}</h3>
+                        <p class="text-xs text-emerald-200 mt-0.5">{{ contact.institute_name if contact else 'دار التعلیم والقرآن اکیڈمی' }}</p>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-emerald-700/60 font-urdu text-xs text-emerald-100 leading-relaxed">
+                    {{ contact.welcome_quote if contact else '«خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ» — تم میں سے بہترین وہ ہے جو قرآن سیکھے اور سکھائے۔' }}
+                </div>
+            </div>
+
+            <!-- 1. Direct WhatsApp -->
+            {% if contact and contact.whatsapp_number %}
+            <a href="https://wa.me/{{ contact.whatsapp_number|replace(' ', '')|replace('+', '') }}?text=السلام علیکم! مجھے دار التعلیم اکیڈمی کے متعلق معلومات درکار ہیں۔" target="_blank"
+               class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-lg hover:border-emerald-500 transition duration-200 flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 block uppercase">واٹس ایپ رابطہ</span>
+                        <strong class="text-base text-slate-800 font-mono tracking-wider ltr-text">{{ contact.whatsapp_number }}</strong>
+                    </div>
+                </div>
+                <span class="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                    <span>چیٹ شروع کریں</span>
+                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                </span>
+            </a>
+            {% endif %}
+
+            <!-- 2. Phone Call -->
+            {% if contact and contact.phone_number %}
+            <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-phone"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-bold text-slate-400 block uppercase">فون نمبر</span>
+                    <strong class="text-base text-slate-800 font-mono tracking-wider ltr-text">{{ contact.phone_number }}</strong>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 3. Email -->
+            {% if contact and contact.email %}
+            <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-envelope"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-bold text-slate-400 block uppercase">ای میل ایڈریس</span>
+                    <strong class="text-sm text-slate-800 font-mono">{{ contact.email }}</strong>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 4. Address -->
+            {% if contact and contact.address %}
+            <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-location-dot"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-bold text-slate-400 block uppercase">پتہ و مرکز</span>
+                    <strong class="text-xs text-slate-800">{{ contact.address }}</strong>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Inquiry Form (lg:col-span-7) -->
+        <div class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl space-y-6">
+            <div>
+                <h3 class="text-xl font-bold text-slate-900">آن لائن میسج بھیجیں (Send Message)</h3>
+                <p class="text-xs text-slate-500 font-urdu mt-1">ہم جلد از جلد آپ کے سوال کا جواب دیں گے:</p>
+            </div>
+
+            <div id="contactSentAlert" class="hidden p-4 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold">
+                <i class="fa-solid fa-check-circle mr-1"></i> آپ کا پیغام موصول ہو گیا ہے۔ جلد آپ سے رابطہ کیا جائے گا۔
+            </div>
+
+            <form id="contactForm" class="space-y-4" onsubmit="event.preventDefault(); document.getElementById('contactSentAlert').classList.remove('hidden'); this.reset();">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">آپ کا نام *</label>
+                        <input type="text" required placeholder="محمد عثمان" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-600 focus:bg-white text-slate-900">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">واٹس ایپ نمبر *</label>
+                        <input type="tel" required placeholder="03001234567" dir="ltr" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-600 focus:bg-white text-slate-900 text-right font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">موضوع (Subject)</label>
+                    <select class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-600 focus:bg-white text-slate-900">
+                        <option>نئے داخلے سے متعلق سوال</option>
+                        <option>کلاس روم ٹائمنگز</option>
+                        <option>فیس و معاونت</option>
+                        <option>دیگر معلومات</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">آپ کا پیغام *</label>
+                    <textarea rows="4" required placeholder="اپنا سوال یا پیغام یہاں لکھیں..." class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-600 focus:bg-white text-slate-900"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-sm shadow-lg shadow-emerald-800/20 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane text-amber-300"></i>
+                    <span>پیغام ارسال کریں</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

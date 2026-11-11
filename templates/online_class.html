@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}آن لائن کلاس (Zoom Live) — دار التعلیم والقرآن اکیڈمی{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+
+    <!-- Header Section -->
+    <div class="text-center max-w-2xl mx-auto space-y-3">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-100 text-rose-800 text-xs font-bold shadow-sm">
+            <i class="fa-solid fa-video text-rose-600 animate-pulse"></i>
+            <span>آن لائن لائیو کلاس روم • بذریعہ Zoom</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+            براہِ راست آن لائن کلاس (Zoom Meeting)
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-600 font-urdu leading-relaxed">
+            استاد محترم کی زیرِ نگرانی قرآن پاک تجوید، ترجمہ و تفسیر اور نورانی قاعدہ کی لائیو کلاس میں ایک کلک پر شامل ہوں۔
+        </p>
+    </div>
+
+    <!-- Live Status Banner -->
+    <div class="{% if classroom.is_zoom_live %}bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 border-emerald-700/60 text-white{% else %}bg-slate-900 border-slate-800 text-slate-300{% endif %} rounded-3xl p-6 sm:p-8 border shadow-xl relative overflow-hidden">
+        <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="space-y-3 text-center md:text-right">
+                <div class="flex items-center justify-center md:justify-start gap-2.5">
+                    {% if classroom.is_zoom_live %}
+                    <span class="w-3.5 h-3.5 rounded-full bg-emerald-400 live-indicator-pulse"></span>
+                    <span class="text-xs font-extrabold text-amber-300 uppercase tracking-wider">کلاس روم لائیو ہے (Class is Live Now)</span>
+                    {% else %}
+                    <span class="w-3.5 h-3.5 rounded-full bg-slate-500"></span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">سیشن آف لائن ہے (Offline)</span>
+                    {% endif %}
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-black text-white">
+                    {{ classroom.zoom_topic or "روزانہ کی لائیو کلاس - دار التعلیم والقرآن" }}
+                </h2>
+                <p class="text-xs sm:text-sm text-emerald-100/90 font-urdu max-w-xl">
+                    {{ classroom.zoom_instructions or "کلاس کے مقررہ وقت پر نیچے دیے گئے بٹن پر کلک کر کے فوری طور پر زووم میٹنگ میں شامل ہوں۔" }}
+                </p>
+            </div>
+
+            <!-- Big Direct Join Button (Requirement 2) -->
+            <div class="flex flex-col sm:flex-row md:flex-col gap-3 w-full sm:w-auto flex-shrink-0">
+                <a href="{{ classroom.zoom_link or 'https://zoom.us/join' }}" target="_blank" rel="noopener noreferrer"
+                   class="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-black text-sm shadow-xl shadow-blue-900/40 hover:scale-105 transition duration-200 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-video text-xl text-amber-300"></i>
+                    <span>زووم کلاس میں شامل ہوں (Join Zoom)</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-70"></i>
+                </a>
+
+                {% if classroom.zoom_meeting_id %}
+                <a href="https://app.zoom.us/wc/join/{{ classroom.zoom_meeting_id|replace(' ', '') }}" target="_blank" rel="noopener noreferrer"
+                   class="px-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition text-center flex items-center justify-center gap-2 border border-white/20">
+                    <i class="fa-solid fa-globe"></i>
+                    <span>براؤزر میں زووم کھولیں (Web Client)</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Zoom Meeting Details Card -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- 1. Meeting ID -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-id-card"></i>
+                </div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase">Meeting ID</span>
+            </div>
+            <div>
+                <span class="text-xs text-slate-500 block mb-1">زووم میٹنگ آئی ڈی:</span>
+                <div class="text-xl sm:text-2xl font-black text-slate-900 font-mono tracking-wider" id="meetingIdText">
+                    {{ classroom.zoom_meeting_id or "854 2190 3341" }}
+                </div>
+            </div>
+            <button onclick="copyToClipboard('{{ classroom.zoom_meeting_id or '854 2190 3341' }}', 'آئی ڈی کاپی ہو گئی!')"
+                    class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                <i class="fa-regular fa-copy"></i>
+                <span>میٹنگ آئی ڈی کاپی کریں</span>
+            </button>
+        </div>
+
+        <!-- 2. Passcode -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-key"></i>
+                </div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase">Passcode</span>
+            </div>
+            <div>
+                <span class="text-xs text-slate-500 block mb-1">کلاس روم پاس کوڈ:</span>
+                <div class="text-xl sm:text-2xl font-black text-amber-700 font-mono tracking-wider">
+                    {{ classroom.zoom_password or "786786" }}
+                </div>
+            </div>
+            <button onclick="copyToClipboard('{{ classroom.zoom_password or '786786' }}', 'پاس کوڈ کاپی ہو گیا!')"
+                    class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                <i class="fa-regular fa-copy"></i>
+                <span>پاس کوڈ کاپی کریں</span>
+            </button>
+        </div>
+
+        <!-- 3. Teacher Info & WhatsApp Help -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                    <i class="fa-brands fa-whatsapp text-2xl"></i>
+                </div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase">رابطہ و مدد</span>
+            </div>
+            <div>
+                <span class="text-xs text-slate-500 block mb-1">استادِ محترم:</span>
+                <div class="text-base font-bold text-slate-900">
+                    {{ contact.teacher_name if contact else "قاری عبد الرحمن صاحب" }}
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">کوئی مشکل پیش آنے پر واٹس ایپ رابطہ کریں۔</p>
+            </div>
+            {% if contact and contact.whatsapp_number %}
+            <a href="https://wa.me/{{ contact.whatsapp_number|replace(' ', '')|replace('+', '') }}?text=السلام%20علیکم،%20مجھے%20آن%20لائن%20زووم%20کلاس%20کے%20حوالے%20سے%20رہنمائی%20چاہیے۔" target="_blank"
+               class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+                <i class="fa-brands fa-whatsapp text-base"></i>
+                <span>واٹس ایپ پر مدد حاصل کریں</span>
+            </a>
+            {% else %}
+            <div class="text-xs text-slate-400 text-center py-2">رابطہ نمبر دستیاب ہے۔</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Step by Step Guide on How to Join Zoom Class -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+        <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-circle-question text-emerald-600"></i>
+            <span>زووم کلاس میں شامل ہونے کا آسان طریقہ (How to Join)</span>
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">1</div>
+                <h4 class="font-bold text-slate-900 text-sm">مرحلہ 1: لنک پر کلک کریں</h4>
+                <p class="text-xs text-slate-600 font-urdu leading-relaxed">
+                    اوپر دیے گئے نیلے بٹن <strong>"زووم کلاس میں شامل ہوں"</strong> پر کلک کریں۔ اگر آپ موبائل پر ہیں تو زووم ایپ خودکار طریقے سے کھل جائے گی۔
+                </p>
+            </div>
+
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">2</div>
+                <h4 class="font-bold text-slate-900 text-sm">مرحلہ 2: نام درج کریں</h4>
+                <p class="text-xs text-slate-600 font-urdu leading-relaxed">
+                    اپنا درست اسلامی نام اور طالب علم آئی ڈی درج کریں تاکہ استادِ محترم کو آپ کی شناخت اور حاضری لگانے میں آسانی ہو۔
+                </p>
+            </div>
+
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">3</div>
+                <h4 class="font-bold text-slate-900 text-sm">مرحلہ 3: آڈیو کنیکٹ کریں</h4>
+                <p class="text-xs text-slate-600 font-urdu leading-relaxed">
+                    میٹنگ میں داخل ہونے کے بعد <strong>"Join Audio / Wifi or Cellular Data"</strong> پر کلک کریں تاکہ استاد کی آواز سن سکیں اور اپنا سبق سنا سکیں۔
+                </p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Copy Toast Notification -->
+<div id="copyToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl text-xs font-bold shadow-2xl flex items-center gap-2 hidden z-50 transition">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="copyToastMsg">کاپی ہو گیا!</span>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function copyToClipboard(text, msg) {
+        navigator.clipboard.writeText(text).then(() => {
+            const toast = document.getElementById('copyToast');
+            document.getElementById('copyToastMsg').innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        });
+    }
+</script>
+{% endblock %}

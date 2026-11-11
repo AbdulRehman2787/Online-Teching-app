@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.title_urdu or course.title }} — دار التعلیم والقرآن{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <!-- Breadcrumb -->
+    <a href="/courses" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1.5 self-start">
+        <i class="fa-solid fa-arrow-right"></i>
+        <span>تمام کورسز کی فہرست پر واپس جائیں</span>
+    </a>
+
+    <!-- Course Banner Card -->
+    <div class="bg-gradient-to-r from-emerald-800 via-emerald-900 to-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl grid grid-cols-1 md:grid-cols-12 gap-8 items-center border border-emerald-700/40">
+        <div class="md:col-span-8 space-y-4">
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-full bg-emerald-700/80 text-amber-300 text-xs font-bold border border-emerald-600">
+                    {{ course.category }}
+                </span>
+                <span class="text-xs text-slate-300"><i class="fa-solid fa-clock ml-1 text-amber-400"></i> {{ course.duration }}</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-black text-white leading-tight">
+                {{ course.title_urdu or course.title }}
+            </h1>
+            <p class="text-xs sm:text-sm text-emerald-200 font-semibold">{{ course.title }}</p>
+            <p class="text-xs sm:text-sm text-slate-200 font-urdu leading-relaxed pt-2">
+                {{ course.description }}
+            </p>
+            <div class="pt-4 flex flex-wrap gap-3">
+                <a href="/join" class="px-6 py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>اس کورس میں داخلہ لیں (کلاس میں شامل ہوں)</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="md:col-span-4 flex justify-center">
+            <div class="w-full max-w-xs rounded-2xl overflow-hidden shadow-2xl border-2 border-emerald-500/30">
+                <img src="{{ course.thumbnail_url or '/static/images/green_dome.svg' }}" alt="{{ course.title }}" class="w-full h-48 object-cover">
+            </div>
+        </div>
+    </div>
+
+    <!-- Syllabus / Lessons List -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+        <h2 class="text-xl font-bold text-slate-900 border-b border-slate-100 pb-4 flex items-center justify-between">
+            <span>کورس کا نصاب و اسباق (Syllabus & Lessons)</span>
+            <span class="text-xs text-emerald-700 font-bold bg-emerald-50 px-3 py-1 rounded-xl">
+                کل اسباق: {{ course.lessons|length }}
+            </span>
+        </h2>
+
+        <div class="space-y-4">
+            {% for lesson in course.lessons %}
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-emerald-400 transition">
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-sm font-bold font-mono flex-shrink-0">
+                        {{ lesson.lesson_number }}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-base font-bold text-slate-900">{{ lesson.title }}</h3>
+                            {% if lesson.is_free_preview %}
+                            <span class="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-bold">مفت پریویو</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-xs text-slate-600 font-urdu mt-1 leading-relaxed">
+                            {{ lesson.description or 'قرآن و سنت کی روشنی میں تفصیلی درسی سبق۔' }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <a href="/join" class="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                        <span>پڑھنے کے لیے داخلہ لیں</span>
+                        <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-xs text-slate-500 py-6 text-center">اسباق جلد شائع کیے جا رہے ہیں۔</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

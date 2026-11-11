@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#022c22" />
+      <stop offset="50%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="domeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="35%" stop-color="#059669" />
+      <stop offset="80%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#064e3b" />
+    </linearGradient>
+    <linearGradient id="goldSpire" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="50%" stop-color="#d97706" />
+      <stop offset="100%" stop-color="#78350f" />
+    </linearGradient>
+    <linearGradient id="wallGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+
+  <!-- Sky Background -->
+  <rect width="800" height="500" fill="url(#skyGrad)" />
+
+  <!-- Stars in Sky -->
+  <circle cx="120" cy="80" r="1.5" fill="#fef08a" opacity="0.8" />
+  <circle cx="220" cy="50" r="2" fill="#ffffff" opacity="0.9" />
+  <circle cx="340" cy="90" r="1.5" fill="#fef08a" opacity="0.7" />
+  <circle cx="680" cy="70" r="2" fill="#ffffff" opacity="0.8" />
+  <circle cx="740" cy="110" r="1.5" fill="#fef08a" opacity="0.7" />
+  <circle cx="620" cy="40" r="2" fill="#fef08a" opacity="0.9" />
+
+  <!-- Crescent Moon in Sky -->
+  <path d="M 690 90 A 28 28 0 1 0 720 140 A 24 24 0 1 1 690 90 Z" fill="#fef08a" />
+
+  <!-- Mosque Base / Silhouettes in Distance -->
+  <rect x="50" y="320" width="700" height="180" fill="#022c22" opacity="0.85" />
+  <rect x="100" y="300" width="600" height="200" fill="#011f18" />
+
+  <!-- Minaret Left -->
+  <rect x="180" y="140" width="28" height="200" fill="#fef3c7" />
+  <polygon points="175,140 213,140 194,90" fill="url(#goldSpire)" />
+  <circle cx="194" cy="85" r="4" fill="#fef08a" />
+
+  <!-- Minaret Right -->
+  <rect x="590" y="140" width="28" height="200" fill="#fef3c7" />
+  <polygon points="585,140 623,140 604,90" fill="url(#goldSpire)" />
+  <circle cx="604" cy="85" r="4" fill="#fef08a" />
+
+  <!-- Main Masjid Walls -->
+  <rect x="260" y="270" width="280" height="150" fill="url(#wallGrad)" opacity="0.95" />
+  <!-- Arches on Wall -->
+  <path d="M 285 360 C 285 330 315 330 315 360 Z" fill="#022c22" />
+  <path d="M 345 360 C 345 330 375 330 375 360 Z" fill="#022c22" />
+  <path d="M 405 360 C 405 330 435 330 435 360 Z" fill="#022c22" />
+  <path d="M 465 360 C 465 330 495 330 495 360 Z" fill="#022c22" />
+
+  <!-- Drum Base for Green Dome -->
+  <rect x="300" y="240" width="200" height="35" fill="#fef3c7" rx="3" />
+  <circle cx="330" cy="257" r="5" fill="#047857" />
+  <circle cx="365" cy="257" r="5" fill="#047857" />
+  <circle cx="400" cy="257" r="5" fill="#047857" />
+  <circle cx="435" cy="257" r="5" fill="#047857" />
+  <circle cx="470" cy="257" r="5" fill="#047857" />
+
+  <!-- THE GREEN DOME (قبة الخضراء) -->
+  <path d="M 305 240 C 305 130 380 115 400 95 C 420 115 495 130 495 240 Z" fill="url(#domeGrad)" stroke="#022c22" stroke-width="2" />
+
+  <!-- Dome Highlights & Ribs -->
+  <path d="M 400 95 C 400 150 400 210 400 240" stroke="#34d399" stroke-width="2" opacity="0.6" />
+  <path d="M 400 95 C 375 140 355 190 350 240" stroke="#34d399" stroke-width="1.5" opacity="0.5" />
+  <path d="M 400 95 C 425 140 445 190 450 240" stroke="#064e3b" stroke-width="2" opacity="0.7" />
+
+  <!-- Golden Spire & Crescent of Green Dome -->
+  <rect x="397" y="65" width="6" height="30" fill="url(#goldSpire)" />
+  <circle cx="400" cy="62" r="5" fill="#fef08a" />
+  <circle cx="400" cy="52" r="4" fill="#fef08a" />
+  <path d="M 396 35 A 8 8 0 1 0 404 49 A 6 6 0 1 1 396 35 Z" fill="#fef08a" />
+
+  <!-- Foreground Floor Courtyard Reflection -->
+  <rect x="0" y="420" width="800" height="80" fill="#011f18" />
+  <line x1="0" y1="420" x2="800" y2="420" stroke="#d97706" stroke-width="3" />
+</svg>

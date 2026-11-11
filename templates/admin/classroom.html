@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}کلاس روم کنٹرول — ایڈمن پینل{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 bg-rose-100 px-3 py-1 rounded-full mb-2">
+                <i class="fa-solid fa-chalkboard-user"></i>
+                <span>ایڈمن پینل • لائیو سیشن کنٹرول</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900">آن لائن کلاس روم مینیجمنٹ (Classroom Control)</h1>
+            <p class="text-xs text-slate-500 font-urdu mt-1">کلاس کا آغاز، اختتام، کلاس پاسورڈ اور لائیو طلبہ کی حاضری کا کنٹرول</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <a href="/classroom/teacher" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs shadow-md transition flex items-center gap-2">
+                <i class="fa-solid fa-video text-amber-300"></i>
+                <span>ٹیچر اسٹوڈیو روم میں جائیں</span>
+            </a>
+            <a href="/admin/dashboard" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+                <i class="fa-solid fa-arrow-right"></i>
+                <span>ڈیش بورڈ</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Toast Alert -->
+    <div id="classToast" class="hidden p-4 rounded-2xl text-xs font-bold transition shadow-lg flex items-center justify-between">
+        <span id="classToastMsg"></span>
+        <button onclick="document.getElementById('classToast').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Live Status & Session Action Card (Requirement 11) -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+        <div class="md:col-span-8 space-y-4">
+            <div class="flex items-center gap-3">
+                <span class="w-4 h-4 rounded-full {% if classroom.is_live %}bg-emerald-500 live-indicator-pulse{% else %}bg-slate-300{% endif %}"></span>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    اسٹیٹس: <strong class="{% if classroom.is_live %}text-emerald-700{% else %}text-slate-500{% endif %}">{% if classroom.is_live %}کلاس روم ابھی لائیو ہے (Active){% else %}آف لائن (Offline){% endif %}</strong>
+                </span>
+            </div>
+
+            <h2 class="text-2xl font-black text-slate-900">{{ classroom.name }}</h2>
+            <p class="text-xs text-slate-500 font-urdu leading-relaxed">
+                مستقل کلاس آئی ڈی: <strong class="font-mono text-slate-800">{{ classroom.permanent_id }}</strong> • زیادہ سے زیادہ گنجائش: <strong class="font-mono text-slate-800">{{ classroom.max_students }} طلبہ</strong>
+            </p>
+
+            <div class="flex flex-wrap items-center gap-3 pt-2">
+                <!-- Start / End Toggle Button (Requirement 11) -->
+                {% if classroom.is_live %}
+                <button onclick="toggleLiveClass()" class="px-6 py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg transition flex items-center gap-2">
+                    <i class="fa-solid fa-stop"></i>
+                    <span>کلاس ختم کریں (End Class)</span>
+                </button>
+                {% else %}
+                <button onclick="toggleLiveClass()" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs shadow-lg shadow-emerald-800/20 transition flex items-center gap-2">
+                    <i class="fa-solid fa-play text-amber-300"></i>
+                    <span>کلاس شروع کریں (Start Class)</span>
+                </button>
+                {% endif %}
+
+                <!-- Copy Share Link (Requirement 11) -->
+                <button onclick="copyClassLink()" class="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-2">
+                    <i class="fa-solid fa-share-nodes text-indigo-600"></i>
+                    <span>کلاس روم لنک کاپی کریں</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Security & Class Password Card -->
+        <div class="md:col-span-4 bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-lock text-amber-600"></i>
+                <span>کلاس روم پاسورڈ (Security)</span>
+            </h3>
+            <div class="space-y-1">
+                <span class="text-[11px] text-slate-500">موجودہ پاسورڈ:</span>
+                <div class="font-mono text-lg font-bold text-slate-900 bg-white px-3 py-2 rounded-xl border border-slate-200">
+                    {{ classroom.password }}
+                </div>
+            </div>
+
+            <!-- Change Password Form -->
+            <form id="changeClassPasswordForm" class="space-y-2">
+                <input type="text" id="newClassPassword" required placeholder="نیا پاسورڈ درج کریں"
+                    class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-mono">
+                <button type="submit" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold text-xs transition">
+                    پاسورڈ تبدیل کریں
+                </button>
+            </form>
+            <p class="text-[10px] text-slate-400">پاسورڈ تبدیل ہوتے ہی غیر متعلقہ پرانے طلبہ منقطع ہو جائیں گے۔</p>
+        </div>
+    </div>
+
+    <!-- Active Participants in Live Room (Requirement 11) -->
+    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-users-viewfinder text-emerald-600"></i>
+                <span>کلاس میں موجود ایکٹو طلبہ (Active Participants in Session)</span>
+            </h3>
+            <span class="text-xs text-slate-500 font-mono font-bold">
+                {{ participants|length }} / {{ classroom.max_students }} حاضر
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                        <th class="py-2.5 px-3">طالب علم کا نام</th>
+                        <th class="py-2.5 px-3">سیشن آئی ڈی</th>
+                        <th class="py-2.5 px-3">حاضری اسٹیٹس</th>
+                        <th class="py-2.5 px-3 text-center">اخراج (Kick / Block)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for p in participants %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3 px-3 font-bold text-slate-900">{{ p.name }}</td>
+                        <td class="py-3 px-3 font-mono text-slate-500">{{ p.identity }}</td>
+                        <td class="py-3 px-3 text-emerald-700 font-bold">حاضر (Online)</td>
+                        <td class="py-3 px-3 text-center">
+                            <button onclick="kickStudent('{{ p.identity }}')" class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold transition">
+                                <i class="fa-solid fa-user-slash ml-1"></i> کلاس سے نکالیں
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center py-6 text-slate-400">فی الحال کلاس روم میں کوئی طالب علم آن لائن نہیں ہے۔</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showToast(msg, isSuccess = true) {
+        const toast = document.getElementById('classToast');
+        const text = document.getElementById('classToastMsg');
+        text.innerText = msg;
+        toast.className = `p-4 rounded-2xl text-xs font-bold transition shadow-lg flex items-center justify-between ${isSuccess ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-red-100 text-red-900 border border-red-300'}`;
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 5000);
+    }
+
+    async function toggleLiveClass() {
+        try {
+            const resp = await fetch('/api/admin/classroom/toggle-live', { method: 'POST' });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    }
+
+    function copyClassLink() {
+        const url = window.location.origin + '/classroom/student';
+        navigator.clipboard.writeText(url).then(() => {
+            showToast("کلاس روم کا لنک کاپی ہو گیا ہے: " + url, true);
+        });
+    }
+
+    document.getElementById('changeClassPasswordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pass = document.getElementById('newClassPassword').value.trim();
+        if (!pass) return;
+
+        try {
+            const resp = await fetch('/api/teacher/classroom/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_password: pass })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+                showToast("کلاس پاسورڈ کامیابی سے تبدیل ہو گیا!", true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    });
+
+    async function kickStudent(identity) {
+        if (!confirm("کیا آپ واقعی اس طالب علم کو لائیو کلاس سے منقطع کرنا چاہتے ہیں؟")) return;
+        try {
+            const resp = await fetch(`/api/teacher/classroom/kick-student?participant_identity=${identity}`, {
+                method: 'POST'
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+                showToast("طالب علم کلاس سے منقطع ہو گیا۔", true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    }
+</script>
+{% endblock %}

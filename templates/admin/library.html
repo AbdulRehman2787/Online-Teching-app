@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}کتب خانہ مینیجمنٹ — ایڈمن پینل{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 bg-teal-100 px-3 py-1 rounded-full mb-2">
+                <i class="fa-solid fa-book-open"></i>
+                <span>ایڈمن پینل • کتب خانہ مینیجمنٹ</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900">اسلامی کتب خانہ مینیجمنٹ (Library Management)</h1>
+            <p class="text-xs text-slate-500 font-urdu mt-1">پی ڈی ایف کتب اپلوڈ کریں، مصنف، کیٹیگری اور سرورق کی تدوین کریں</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button onclick="openUploadBookModal()" class="px-5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-600 text-white font-bold text-xs shadow-md transition flex items-center gap-2">
+                <i class="fa-solid fa-plus text-amber-300"></i>
+                <span>نئی کتاب اپلوڈ کریں (Add Book)</span>
+            </button>
+            <a href="/admin/dashboard" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+                <i class="fa-solid fa-arrow-right"></i>
+                <span>ڈیش بورڈ</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="libraryToast" class="hidden p-4 rounded-2xl text-xs font-bold transition shadow-lg flex items-center justify-between">
+        <span id="libraryToastMsg"></span>
+        <button onclick="document.getElementById('libraryToast').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Books Grid (Requirement 9) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for book in books %}
+        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg transition flex flex-col group">
+            <div class="relative h-48 bg-slate-900 overflow-hidden">
+                <img src="{{ book.cover_image or 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=400&q=80' }}" alt="{{ book.title }}" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition duration-300">
+                <span class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-slate-900/80 text-amber-300 text-[10px] font-bold backdrop-blur">
+                    {{ book.category or 'اسلامی کتب' }}
+                </span>
+                <span class="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 rounded-md {% if book.is_published %}bg-emerald-600{% else %}bg-slate-500{% endif %} text-white text-[10px] font-bold">
+                    {% if book.is_published %}شائع شدہ{% else %}غیر شائع{% endif %}
+                </span>
+            </div>
+
+            <div class="p-5 flex-1 flex flex-col">
+                <h3 class="text-base font-bold text-slate-900 line-clamp-1">{{ book.title }}</h3>
+                <p class="text-xs text-slate-500 font-semibold mt-1 mb-2">
+                    <i class="fa-solid fa-feather-pointed ml-1 text-amber-600"></i> {{ book.author or 'نامعلوم مصنف' }}
+                </p>
+                <p class="text-xs text-slate-600 font-urdu line-clamp-2 flex-1 mb-4">
+                    {{ book.description or 'کوئی اضافی تفصیل نہیں ہے۔' }}
+                </p>
+
+                <!-- Actions: Edit, Toggle Publish, Delete (Requirement 9) -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <a href="/{{ book.file_path }}" target="_blank" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs transition" title="پی ڈی ایف کھولیں">
+                        <i class="fa-solid fa-eye"></i>
+                    </a>
+                    <button onclick="togglePublishBook({{ book.id }})" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs transition" title="پبلش / ان پبلش">
+                        <i class="fa-solid fa-toggle-{% if book.is_published %}on text-emerald-600{% else %}off text-slate-400{% endif %} text-base"></i>
+                    </button>
+                    <button onclick="openEditBookModal({{ book.id }}, '{{ book.title }}', '{{ book.author or '' }}', '{{ book.category or '' }}', '{{ book.cover_image or '' }}', `{{ book.description or '' }}`)" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs transition" title="تبدیل کریں">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button onclick="deleteBook({{ book.id }})" class="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs transition" title="حذف کریں">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODALS: UPLOAD BOOK & EDIT BOOK (REQ 9)                  -->
+<!-- ======================================================== -->
+
+<!-- 1. UPLOAD BOOK MODAL -->
+<div id="uploadBookModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-4 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900">نئی کتاب اپلوڈ کریں (Upload PDF Book)</h3>
+            <button onclick="closeUploadBookModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <form id="uploadBookForm" class="space-y-3 text-xs" enctype="multipart/form-data">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">کتاب کا عنوان (Title) *</label>
+                <input type="text" id="bookTitle" required placeholder="مثلاً: تفسیرِ عثمانی" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">مصنف کا نام (Author)</label>
+                    <input type="text" id="bookAuthor" placeholder="علامہ شبیر احمد عثمانیؒ" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">کیٹیگری (Category)</label>
+                    <select id="bookCategory" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+                        <option value="قرآنی علوم" selected>قرآنی علوم</option>
+                        <option value="تجوید و قراءت">تجوید و قراءت</option>
+                        <option value="حدیث شریف">حدیث شریف</option>
+                        <option value="سنت و اذکار">سنت و اذکار</option>
+                        <option value="فقہ و اسلامی عقائد">فقہ و اسلامی عقائد</option>
+                        <option value="سیرت النبی ﷺ">سیرت النبی ﷺ</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">پی ڈی ایف فائل اپلوڈ کریں (PDF File) *</label>
+                <input type="file" id="bookPdfFile" required accept=".pdf" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-teal-700 file:text-white file:text-xs">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">سرورق تصویر URL (Cover Image - اختیاری)</label>
+                <input type="url" id="bookCover" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">مختصر تعارف (Description)</label>
+                <textarea id="bookDesc" rows="2" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-urdu"></textarea>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeUploadBookModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold">منسوخ</button>
+                <button type="submit" id="bookUploadSubmitBtn" class="px-5 py-2 rounded-xl bg-teal-700 text-white font-bold hover:bg-teal-600">اپلوڈ کریں</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 2. EDIT BOOK MODAL -->
+<div id="editBookModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-4 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900">کتاب کی معلومات تبدیل کریں (Edit Book)</h3>
+            <button onclick="closeEditBookModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <form id="editBookForm" class="space-y-3 text-xs">
+            <input type="hidden" id="editBookId">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">عنوان</label>
+                <input type="text" id="editBookTitle" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">مصنف</label>
+                    <input type="text" id="editBookAuthor" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">کیٹیگری</label>
+                    <input type="text" id="editBookCategory" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300">
+                </div>
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">سرورق URL</label>
+                <input type="url" id="editBookCover" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">تفصیل</label>
+                <textarea id="editBookDesc" rows="2" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-urdu"></textarea>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeEditBookModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold">منسوخ</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-teal-700 text-white font-bold hover:bg-teal-600">محفوظ کریں</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showToast(msg, isSuccess = true) {
+        const toast = document.getElementById('libraryToast');
+        const text = document.getElementById('libraryToastMsg');
+        text.innerText = msg;
+        toast.className = `p-4 rounded-2xl text-xs font-bold transition shadow-lg flex items-center justify-between ${isSuccess ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-red-100 text-red-900 border border-red-300'}`;
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 5000);
+    }
+
+    function openUploadBookModal() { document.getElementById('uploadBookModal').classList.remove('hidden'); }
+    function closeUploadBookModal() { document.getElementById('uploadBookModal').classList.add('hidden'); }
+
+    function openEditBookModal(id, title, author, cat, cover, desc) {
+        document.getElementById('editBookId').value = id;
+        document.getElementById('editBookTitle').value = title;
+        document.getElementById('editBookAuthor').value = author;
+        document.getElementById('editBookCategory').value = cat;
+        document.getElementById('editBookCover').value = cover;
+        document.getElementById('editBookDesc').value = desc;
+        document.getElementById('editBookModal').classList.remove('hidden');
+    }
+    function closeEditBookModal() { document.getElementById('editBookModal').classList.add('hidden'); }
+
+    // Upload Book
+    document.getElementById('uploadBookForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('bookUploadSubmitBtn');
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>فائل اپلوڈ ہو رہی ہے...</span>';
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('bookTitle').value);
+        formData.append('author', document.getElementById('bookAuthor').value);
+        formData.append('category', document.getElementById('bookCategory').value);
+        formData.append('cover_image', document.getElementById('bookCover').value);
+        formData.append('description', document.getElementById('bookDesc').value);
+        formData.append('file', document.getElementById('bookPdfFile').files[0]);
+
+        try {
+            const resp = await fetch('/api/admin/library/upload', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                closeUploadBookModal();
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                throw new Error(data.detail || "اپلوڈ نہیں ہو سکی۔");
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        }
+    });
+
+    // Edit Book
+    document.getElementById('editBookForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('editBookId').value;
+        const formData = new FormData();
+        formData.append('title', document.getElementById('editBookTitle').value);
+        formData.append('author', document.getElementById('editBookAuthor').value);
+        formData.append('category', document.getElementById('editBookCategory').value);
+        formData.append('cover_image', document.getElementById('editBookCover').value);
+        formData.append('description', document.getElementById('editBookDesc').value);
+
+        try {
+            const resp = await fetch(`/api/admin/library/${id}/edit`, { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                closeEditBookModal();
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    });
+
+    // Toggle publish
+    async function togglePublishBook(bookId) {
+        try {
+            const resp = await fetch(`/api/admin/library/${bookId}/toggle-publish`, { method: 'POST' });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    }
+
+    // Delete book
+    async function deleteBook(bookId) {
+        if (!confirm("کیا آپ واقعی یہ کتاب کتب خانہ سے حذف کرنا چاہتے ہیں؟")) return;
+        try {
+            const resp = await fetch(`/api/admin/library/${bookId}/delete`, { method: 'POST' });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                showToast(data.message, true);
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        } catch (err) {
+            showToast(err.message, false);
+        }
+    }
+</script>
+{% endblock %}
